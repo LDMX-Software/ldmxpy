@@ -7,6 +7,8 @@ import os
 import sys
 import yaml
 
+from rootpy.io import root_open 
+
 def parse_config(config_file) :
 
     print "Loading configuration from " + str(config_file)
@@ -41,32 +43,21 @@ def main() :
         print "[ ldmxpy ]: Adding analysis ==> Module: %s Class: %s" % (analysis_module_name, analysis_class_name)
         analysis_class = getattr(importlib.import_module(analysis_module_name), analysis_class_name)
         analyses_instances.append(analysis_class())
-        #analysis_class().initialize()
 
-    for input_file in config["Files"] : 
-        print 'Processing file ' + str(input_file)
+    # Loop through all of the ROOT files and process them.
+    for rfile_path in config["Files"] :
+        print 'Processing file %s' % rfile_path
+        rfile = root_open(rfile_path)
         
-        root_file = r.TFile(str(input_file))
+        for event_n, event in enumerate(rfile.LDMX_Event):
+            if (event_n + 1)%500 == 0 : print "Event %s" % (event_n + 1)
+            for analysis in analyses_instances:
+                analysis.process(event.LdmxEvent)
 
-        tree = root_file.Get("LDMX_Event")
-
-        ldmx_event = r.event.SimEvent()
-    
-        b_ldmx_event = tree.GetBranch("LdmxEvent")
-        b_ldmx_event.SetAddress(r.AddressOf(ldmx_event))
-
-        for entry in xrange(0, tree.GetEntries()) : 
-
-            if (entry + 1)%500 == 0 : print "Event " + str(entry + 1)
-
-            tree.GetEntry(entry)
-        
-            for analyses in analyses_instances : 
-                analyses.process(ldmx_event)
+        rfile.Close()
 
     for analyses in analyses_instances : 
         analyses.finalize()
-
 
 if __name__ == "__main__":
     main()
