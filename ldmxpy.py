@@ -2,6 +2,7 @@
 
 import argparse
 import importlib
+import Event as e
 import ROOT as r
 import os
 import sys
@@ -26,15 +27,14 @@ def main() :
     if not args.config :
         parser.error('A configuration file needs to be specified.')
 
-    # Load the LDMX event model library.
-    if not os.getenv('LDMX_SW_DIR') :
-        print '[ ldmxpy ]: Error! Location of LDMX event library needs to be set.'
-        sys.exit(2)
-    ldmx_lib_path = os.environ['LDMX_SW_DIR'] + "/install/lib/libEvent.so"
-    r.gSystem.Load(ldmx_lib_path)
+    
+    #ldmx_lib_path = os.environ['LDMX_SW_DIR'] + "/install/lib/libEvent.so"
 
     # Parse the configuration file
     config = parse_config(args.config)
+    
+    # Get the path for the event lib
+    ldmx_lib_path = config['EventLib'][0]
 
     analyses = config["Analyses"]
     analyses_instances = []
@@ -44,18 +44,17 @@ def main() :
         analysis_class = getattr(importlib.import_module(analysis_module_name), analysis_class_name)
         analyses_instances.append(analysis_class())
 
+    event = e.Event(ldmx_lib_path)
     # Loop through all of the ROOT files and process them.
     for rfile_path in config["Files"] :
         print 'Processing file %s' % rfile_path
-        rfile = root_open(rfile_path)
-        
-        for event_n, event in enumerate(rfile.LDMX_Event):
-            if (event_n + 1)%500 == 0 : print "Event %s" % (event_n + 1)
+        event.load_file(rfile_path)
+
+        while event.next_event():
             for analysis in analyses_instances:
-                analysis.process(event.LdmxEvent)
-
-        rfile.Close()
-
+                analysis.process(event)
+            
+        event.close_file()
     for analyses in analyses_instances : 
         analyses.finalize()
 
