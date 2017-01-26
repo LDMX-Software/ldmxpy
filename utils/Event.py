@@ -11,17 +11,21 @@ class Event(object):
         self.tree = None
         self.entry = 0
        
-        self.event_header = r.event.EventHeader()
+        self.event_header = r.ldmx.EventHeader()
 
         self.collections = {}
-        self.collections['SimParticles'] = r.TClonesArray('event::SimParticle')
+        self.collections['SimParticles'] = r.TClonesArray('ldmx::SimParticle')
+        self.collections['EcalHits'] = r.TClonesArray('ldmx::EcalHit')
+        self.collections['HcalHits'] = r.TClonesArray('ldmx::HcalHit')
     
     def load_file(self, rfile_path):
         self.rfile = r.TFile(rfile_path)
         
         self.tree = self.rfile.Get("LDMX_Events")
-        self.tree.SetBranchAddress("EventHeader_sim",  r.AddressOf(self.event_header))
+        self.tree.SetBranchAddress("EventHeader",  r.AddressOf(self.event_header))
         self.tree.SetBranchAddress("SimParticles_sim", r.AddressOf(self.collections['SimParticles']))
+        self.tree.SetBranchAddress("ecalDigis_recon", r.AddressOf(self.collections['EcalHits']))
+        self.tree.SetBranchAddress("hcalDigis_recon", r.AddressOf(self.collections['HcalHits']))
 
         self.entry = 0
 
