@@ -22,12 +22,16 @@ def main() :
     parser = argparse.ArgumentParser(description='')
     parser.add_argument("-c", action='store', dest='config',
                         help="Configuration file.")
+    parser.add_argument("-n", action='store', dest='n_events', 
+                        help="Total number of events.")
     args = parser.parse_args()
 
     if not args.config :
         parser.error('A configuration file needs to be specified.')
 
-    
+    n_events = 0
+    if args.n_events: n_events = args.n_event
+
     #ldmx_lib_path = os.environ['LDMX_SW_DIR'] + "/install/lib/libEvent.so"
 
     # Parse the configuration file
@@ -49,12 +53,19 @@ def main() :
     for rfile_path in config["Files"] :
         print 'Processing file %s' % rfile_path
         event.load_file(rfile_path)
-
+        
+        event_counter = 0
         while event.next_event():
             for analysis in analyses_instances:
                 analysis.process(event)
-            
+            event_counter += 1
+            if event_counter == int(n_events): 
+                print 'Hit event limit'
+                break
+
+        print "Total number of events processed: %s" % event_counter
         event.close_file()
+
     for analyses in analyses_instances : 
         analyses.finalize()
 
