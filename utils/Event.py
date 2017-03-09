@@ -47,7 +47,7 @@ class Event(object):
     def next_event(self):
         if self.entry >= self.tree.GetEntries(): return False
         
-        if (self.entry)%100 == 0 : print "Event %s" % (self.entry + 1)
+        if (self.entry)%1000 == 0 : print "Event %s" % (self.entry + 1)
         
         self.tree.GetEntry(self.entry)
         self.entry += 1
