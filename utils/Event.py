@@ -62,3 +62,6 @@ class Event(object):
     def get_tree(self):
         return self.tree
 
+    def get_file_name(self): 
+        return self.rfile.GetName()
+
