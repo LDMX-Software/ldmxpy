@@ -55,11 +55,13 @@ class PhotoNuclearAnalysis(object) :
         self.events              = []
 
         self.pn_gamma_energy     = []
+        self.gamma_energy_sum    = []
         self.pn_particle_mult    = []
         self.pn_interaction_z    = []
             
         self.n_tracks = []
         self.n_snippets = []
+        self.back_scatters = []
 
         self.recoil_e_truth_p  = []
         self.recoil_e_truth_pt = []
@@ -67,21 +69,20 @@ class PhotoNuclearAnalysis(object) :
         self.recoil_e_truth_py = []
         self.recoil_e_truth_pz = []
 
-        self.lead_neutron_ke     = []
-        self.lead_neutron_pdgid  = []
+        self.lead_hadron_ke   = []
+        self.lead_neutron_ke  = []
+        
         self.lead_neutron_theta  = []
         self.lead_neutron_phi    = []
-        self.lead_em_ke     = []
-        self.lead_em_pdgid  = []
-        self.lead_em_theta  = []
-        self.lead_em_phi    = []
         
-        self.n_charged = []
-
-        self.ecal_hit_energy = []
+        self.ecal_hit_energy   = []
         self.total_energy_ecal = []
+        self.passes_ecal_veto  = []
+        self.ecal_summed_det   = []
+
         self.total_energy_hcal = []
-        self.hcal_hit_energy = []
+        self.hcal_hit_energy   = []
+        self.hcal_total_pe     = []
         self.hcal_z_pos = []
 
         self.up_tp_energy = []
@@ -90,9 +91,15 @@ class PhotoNuclearAnalysis(object) :
         self.target_total_energy = []
         
         self.event_count = -1
+        
+        self.file_prefix = None
 
     def process(self, event) :
-        
+      
+        if not self.file_prefix: 
+          self.file_prefix = event.get_file_name()[event.get_file_name().rfind('/') + 1:-5]
+          print self.file_prefix
+
         self.event_count += 1
 
         # Get the collection of MC particles from the even
@@ -116,6 +123,7 @@ class PhotoNuclearAnalysis(object) :
         findable_tracks = event.get_collection('FindableTracks')
         findable_dic = {}
         snippet_dic = {}
+        axial_dic = {}
 
         # Create a map between a sim particle and a findable track. This particular
         # map will only contain tracks that can be found using the 4s and 3s1a
@@ -124,8 +132,12 @@ class PhotoNuclearAnalysis(object) :
             if ((findable_track.is4sFindable()) 
                     or (findable_track.is3s1aFindable())):
                 findable_dic[findable_track.getSimParticle()] = findable_track
-            elif findable_track.is2sFindable() and findable_track.getSimParticle() != recoil_e:
+            elif findable_track.is2sFindable() & (findable_track.getSimParticle() != recoil_e):
                 snippet_dic[findable_track.getSimParticle()] = findable_track
+            elif (findable_track.is2aFindable() & (not findable_track.is4sFindable())
+                    & (not findable_track.is3s1aFindable()) 
+                    & (not findable_track.is2sFindable())):
+                axial_dic[findable_track.getSimParticle()] = findable_track
 
         # Use the recoil electron to find the PN gamma
         #print "Daughter count: %s" % recoil_e.getDaughterCount()
@@ -148,6 +160,7 @@ class PhotoNuclearAnalysis(object) :
 
         self.n_tracks.append(len(findable_dic))
         self.n_snippets.append(len(snippet_dic))
+        self.back_scatters.append(len(axial_dic))
 
         self.pn_gamma_energy.append(pn_gamma.getEnergy())
         self.pn_particle_mult.append(pn_gamma.getDaughterCount())
@@ -180,15 +193,30 @@ class PhotoNuclearAnalysis(object) :
             self.ecal_hit_energy.append(ecal_hit.getEnergy())
             energy_counter += ecal_hit.getEnergy()
 
+        # Get the collection of Ecal veto results from the event
+        ecal_veto_results = event.get_collection('EcalVeto')
+        
+        # Check if the event would have passed the Ecal veto
+        for ecal_veto_result in ecal_veto_results: 
+            self.ecal_summed_det.append(ecal_veto_result.getSummedDet())
+            if ecal_veto_result.passesVeto(): self.passes_ecal_veto.append(1)
+            else: self.passes_ecal_veto.append(0)
+
         self.total_energy_ecal.append(energy_counter)
 
         hcal_hits = event.get_collection('HcalHits')
         energy_counter = 0
+        pe_counter = 0
         for hcal_hit in hcal_hits: 
             self.hcal_hit_energy.append(hcal_hit.getEnergy())
             energy_counter += hcal_hit.getEnergy()
+            pe_counter += hcal_hit.getPE()
 
         self.total_energy_hcal.append(energy_counter)
+        self.hcal_total_pe.append(pe_counter)
+
+        recoil_sim_hits = event.get_collection('RecoilSimHits')
+
 
     def finalize(self) :
 
@@ -204,10 +232,14 @@ class PhotoNuclearAnalysis(object) :
         self.down_tp_energy = np.array(self.down_tp_energy)
         self.up_tp_energy = np.array(self.up_tp_energy)
         self.n_snippets = np.array(self.n_snippets)
+        self.back_scatters = np.array(self.back_scatters)
         self.ecal_hit_energy = np.array(self.ecal_hit_energy)
         self.total_energy_ecal = np.array(self.total_energy_ecal)
+        self.passes_ecal_veto = np.array(self.passes_ecal_veto)
+        self.ecal_summed_det = np.array(self.ecal_summed_det)
         self.total_energy_hcal = np.array(self.total_energy_hcal)
         self.hcal_hit_energy = np.array(self.hcal_hit_energy)
+        self.hcal_total_pe = np.array(self.hcal_total_pe)
 
         plt = Plotter.Plotter("photo_nuclear_analysis")
 
@@ -286,7 +318,25 @@ class PhotoNuclearAnalysis(object) :
                               ],
                       ylog=True,
                       x_label='Snippet Multiplicity')
-        
+
+        plt.plot_hists([self.back_scatters, 
+                       self.back_scatters[self.down_tp_energy < 0.75], 
+                       self.back_scatters[self.up_tp_energy < 0.5],
+                       self.back_scatters[self.n_tracks == 1], 
+                       self.back_scatters[self.n_snippets == 0], 
+                       self.back_scatters[veto] 
+                       ],
+                      np.linspace(0, 10, 11),
+                      labels=['All', 
+                              'Downstream TP Energy < 0.75 MeV',
+                              'Upstream TP Energy < 0.5 MeV',
+                              'N tracks == 1',
+                              'N 2s tracks == 0',
+                              'Upstream Veto'
+                              ],
+                      ylog=True,
+                      x_label='Back Scatter Multiplicity')
+
         
         plt.plot_hists([self.down_tp_energy, 
                        self.down_tp_energy[self.down_tp_energy < 0.75], 
@@ -403,26 +453,60 @@ class PhotoNuclearAnalysis(object) :
 
 
         plt.close()
-        
-        print "Total events processed: %s" % len(self.n_tracks)
+       
+        output = file(self.file_prefix + "_results.txt", 'w')
+        output.write( "Total events processed: %s\n" % len(self.n_tracks))
         
         pass_tp_veto = len(self.down_tp_energy[self.down_tp_energy < 0.75])
         pass_tp_veto_per = pass_tp_veto/len(self.down_tp_energy)
-        print 'Pass down TP veto: %s (%s)' % (pass_tp_veto, pass_tp_veto_per*100)
+        output.write( 'Pass down TP veto: %s (%s)\n' % (pass_tp_veto, pass_tp_veto_per*100))
 
         pass_tp_up_veto = len(self.up_tp_energy[self.up_tp_energy < 0.5])
         pass_tp_up_veto_per = pass_tp_up_veto/len(self.up_tp_energy)
-        print 'Pass up TP veto: %s (%s)' % (pass_tp_up_veto, pass_tp_up_veto_per*100)
+        output.write( 'Pass up TP veto: %s (%s)\n' % (pass_tp_up_veto, pass_tp_up_veto_per*100))
 
         pass_track_veto = len(self.n_tracks[self.n_tracks == 1])
         pass_track_veto_per = pass_track_veto/len(self.n_tracks)
-        print 'Events that pass track veto: %s (%s)' % (pass_track_veto, pass_track_veto_per*100)
+        output.write( 'Events that pass track veto: %s (%s)\n' % (pass_track_veto, pass_track_veto_per*100))
 
         pass_snippet_veto = len(self.n_snippets[self.n_snippets == 0])
         pass_snippet_veto_per = pass_snippet_veto/len(self.n_snippets)
-        print 'Events passing snippet veto: %s (%s)' % (pass_snippet_veto, pass_track_veto_per*100)
+        output.write( 'Events passing snippet veto: %s (%s)\n' % (pass_snippet_veto, pass_snippet_veto_per*100))
 
+        pass_bs_veto = len(self.back_scatters[self.back_scatters == 0])
+        pass_bs_veto_per = pass_bs_veto/len(self.back_scatters)
+        output.write( 'Events passing bs veto: %s (%s)\n' % (pass_bs_veto, pass_bs_veto_per*100))
+
+        pass_hcal_veto = len(self.hcal_total_pe[self.hcal_total_pe <= 8])
+        pass_hcal_veto_per = pass_hcal_veto/len(self.hcal_total_pe)
+        output.write( 'Events passing hcal veto: %s (%s)\n' % (pass_hcal_veto, pass_hcal_veto_per*100))
+
+        pass_ecal_veto = len(self.passes_ecal_veto[self.passes_ecal_veto == 1])
+        pass_ecal_veto_per = pass_ecal_veto/len(self.passes_ecal_veto)
+        output.write( 'Events passing ecal veto: %s (%s)\n' % (pass_ecal_veto, pass_ecal_veto_per*100))
+
+        pass_ecal_sum_cut = len(self.ecal_summed_det[self.ecal_summed_det < 25])
+        pass_ecal_sum_cut_per = pass_ecal_sum_cut/len(self.ecal_summed_det)
+        output.write( 'Events passing ecal sum cut: %s (%s)\n' % (pass_ecal_sum_cut, pass_ecal_sum_cut_per*100))
         veto = ((self.down_tp_energy < 0.75) & (self.n_tracks == 1) & (self.up_tp_energy < 0.5) 
-                & (self.n_snippets == 0))
+                & (self.n_snippets == 0) & (self.back_scatters == 0))
 
-        print "Event passing the veto: %s" % len(self.n_tracks[veto])
+        output.write( "Event passing upstream veto: %s\n" % len(self.n_tracks[veto]))
+        
+        veto = ((self.down_tp_energy < 0.75) & (self.n_tracks == 1) & (self.up_tp_energy < 0.5) 
+                & (self.n_snippets == 0) & (self.back_scatters == 0) & (self.hcal_total_pe <= 8))
+        
+        output.write( "Event passing upstream veto + hcal: %s\n" % len(self.n_tracks[veto]))
+        
+        veto = ((self.down_tp_energy < 0.75) & (self.n_tracks == 1) & (self.up_tp_energy < 0.5) 
+                & (self.n_snippets == 0) & (self.back_scatters == 0) & (self.hcal_total_pe <= 8)
+                & (self.passes_ecal_veto == 1))
+        
+        output.write( "Event passing upstream veto + hcal + ecal bdt: %s\n" % len(self.n_tracks[veto]))
+        
+        veto = ((self.down_tp_energy < 0.75) & (self.n_tracks == 1) & (self.up_tp_energy < 0.5) 
+                & (self.n_snippets == 0) & (self.back_scatters == 0) & (self.hcal_total_pe <= 8)
+                & (self.passes_ecal_veto == 1) & (self.ecal_summed_det < 25))
+        
+        output.write( "Event passing upstream veto + hcal + ecal bdt + ecal sum: %s\n" % len(self.n_tracks[veto]))
+        output.close()
