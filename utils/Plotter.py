@@ -13,7 +13,7 @@ class Plotter(object):
     def __init__(self, file_path): 
         
         plt.style.use('bmh')
-        matplotlib.rcParams.update({'font.size': 12})
+        matplotlib.rcParams.update({'font.size': 20})
         matplotlib.rcParams['axes.facecolor'] = 'white'
         matplotlib.rcParams['legend.numpoints'] = 1
         
