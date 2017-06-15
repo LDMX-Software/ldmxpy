@@ -1,9 +1,9 @@
 
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import ROOT as r
-import root_numpy as rnp
+import matplotlib
+import matplotlib.pyplot as plt
+#import root_numpy as rnp
 
 from itertools import izip
 from matplotlib.backends.backend_pdf import PdfPages
@@ -29,11 +29,11 @@ class Plotter(object):
         if 'name' in params: 
             name = params['name']
 
-        if ('root' in params): 
-            histo = r.TH1F(name, name, len(bins), np.amin(bins), np.amax(bins))
-            rnp.fill_hist(histo, values)
-            histo.Scale(1/histo.Integral(), 'width')
-            histo.Write()
+        #if ('root' in params): 
+        #    histo = r.TH1F(name, name, len(bins), np.amin(bins), np.amax(bins))
+        #    rnp.fill_hist(histo, values)
+        #    histo.Scale(1/histo.Integral(), 'width')
+        #    histo.Write()
             
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 10))
         
@@ -108,6 +108,9 @@ class Plotter(object):
 
         if 'xlog' in params:
             ax.set_xscale('symlog')
+
+        if 'ylog' in params:
+            ax.set_yscale('log')
 
         ax.errorbar(x, y, x_err, y_err, markersize=10, marker='o', 
                     linestyle='-', fmt='', label=label)
