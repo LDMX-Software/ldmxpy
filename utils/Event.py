@@ -3,9 +3,10 @@ import ROOT as r
 
 class Event(object):
 
-    def __init__(self, event_lib_path):
+    def __init__(self, config):
     
-        r.gSystem.Load(event_lib_path)
+        # Get the path for the event lib
+        r.gSystem.Load(config['EventLib'][0])
         
         self.rfile = None
         self.tree = None
@@ -14,30 +15,35 @@ class Event(object):
         self.event_header = r.ldmx.EventHeader()
 
         self.collections = {}
-        self.collections['SimParticles'] = r.TClonesArray('ldmx::SimParticle')
-        self.collections['TriggerPadSimHits'] = r.TClonesArray('ldmx::SimCalorimeterHit')
-        self.collections['EcalSimHits'] = r.TClonesArray('ldmx::SimCalorimeterHit')
-        self.collections['RecoilSimHits'] = r.TClonesArray('ldmx::SimTrackerHit')
-        self.collections['EcalHits'] = r.TClonesArray('ldmx::EcalHit')
-        self.collections['HcalHits'] = r.TClonesArray('ldmx::HcalHit')
-        self.collections['EcalVeto'] = r.TClonesArray('ldmx::EcalVetoResult')
-        self.collections['Trigger'] = r.TClonesArray('ldmx::TriggerResult')
-        self.collections['FindableTracks'] = r.TClonesArray('ldmx::FindableTrackResult')
+        for collection in config['Collections']:
+            self.collections[collection.keys()[0]] = r.TClonesArray(collection.values()[0])
+        
+        #self.collections['SimParticles'] = r.TClonesArray('ldmx::SimParticle')
+        #self.collections['TriggerPadSimHits'] = r.TClonesArray('ldmx::SimCalorimeterHit')
+        #self.collections['EcalSimHits'] = r.TClonesArray('ldmx::SimCalorimeterHit')
+        #self.collections['RecoilSimHits'] = r.TClonesArray('ldmx::SimTrackerHit')
+        #self.collections['EcalHits'] = r.TClonesArray('ldmx::EcalHit')
+        #self.collections['HcalHits'] = r.TClonesArray('ldmx::HcalHit')
+        #self.collections['EcalVeto'] = r.TClonesArray('ldmx::EcalVetoResult')
+        #self.collections['Trigger'] = r.TClonesArray('ldmx::TriggerResult')
+        #self.collections['FindableTracks'] = r.TClonesArray('ldmx::FindableTrackResult')
 
     def load_file(self, rfile_path):
         self.rfile = r.TFile(rfile_path)
         
         self.tree = self.rfile.Get("LDMX_Events")
-        self.tree.SetBranchAddress("EventHeader",      r.AddressOf(self.event_header))
-        self.tree.SetBranchAddress("SimParticles_sim", r.AddressOf(self.collections['SimParticles']))
-        self.tree.SetBranchAddress('TriggerPadSimHits_sim', r.AddressOf(self.collections['TriggerPadSimHits']))
-        self.tree.SetBranchAddress('EcalSimHits_sim', r.AddressOf(self.collections['EcalSimHits']))
-        self.tree.SetBranchAddress('RecoilSimHits_sim', r.AddressOf(self.collections['RecoilSimHits']))
-        self.tree.SetBranchAddress("ecalDigis_recon",  r.AddressOf(self.collections['EcalHits']))
-        self.tree.SetBranchAddress("hcalDigis_recon",  r.AddressOf(self.collections['HcalHits']))
-        self.tree.SetBranchAddress('EcalVeto_recon', r.AddressOf(self.collections['EcalVeto']))
-        self.tree.SetBranchAddress("Trigger_recon",  r.AddressOf(self.collections['Trigger']))
-        self.tree.SetBranchAddress("FindableTracks_recon", r.AddressOf(self.collections['FindableTracks']))
+        for name, collection in self.collections.iteritems():
+            self.tree.SetBranchAddress(name, collection)
+        #self.tree.SetBranchAddress("EventHeader",      r.AddressOf(self.event_header))
+        #self.tree.SetBranchAddress("SimParticles_sim", r.AddressOf(self.collections['SimParticles']))
+        #self.tree.SetBranchAddress('TriggerPadSimHits_sim', r.AddressOf(self.collections['TriggerPadSimHits']))
+        #self.tree.SetBranchAddress('EcalSimHits_sim', r.AddressOf(self.collections['EcalSimHits']))
+        #self.tree.SetBranchAddress('RecoilSimHits_sim', r.AddressOf(self.collections['RecoilSimHits']))
+        #self.tree.SetBranchAddress("ecalDigis_recon",  r.AddressOf(self.collections['EcalHits']))
+        #self.tree.SetBranchAddress("hcalDigis_recon",  r.AddressOf(self.collections['HcalHits']))
+        #self.tree.SetBranchAddress('EcalVeto_recon', r.AddressOf(self.collections['EcalVeto']))
+        #self.tree.SetBranchAddress("Trigger_recon",  r.AddressOf(self.collections['Trigger']))
+        #self.tree.SetBranchAddress("FindableTracks_recon", r.AddressOf(self.collections['FindableTracks']))
 
         self.entry = 0
 

@@ -37,9 +37,6 @@ def main() :
     # Parse the configuration file
     config = parse_config(args.config)
     
-    # Get the path for the event lib
-    ldmx_lib_path = config['EventLib'][0]
-
     analyses = config["Analyses"]
     analyses_instances = []
     for analysis in analyses : 
@@ -48,7 +45,7 @@ def main() :
         analysis_class = getattr(importlib.import_module(analysis_module_name), analysis_class_name)
         analyses_instances.append(analysis_class())
 
-    event = e.Event(ldmx_lib_path)
+    event = e.Event(config)
     # Loop through all of the ROOT files and process them.
     for rfile_path in config["Files"] :
         print 'Processing file %s' % rfile_path
