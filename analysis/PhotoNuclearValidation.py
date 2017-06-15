@@ -50,6 +50,14 @@ class PhotoNuclearValidation(object):
                       ylog=True, 
                       x_label='$T_{p}$ (MeV)')
 
+        plt.plot_hists([np.sqrt(np.power(self.hardest_hadron_ke, 2) + 2*self.hardest_hadron_ke*938.272), 
+                        np.sqrt(np.power(self.hardest_hadron_ke, 2) + 2*self.hardest_hadron_ke*938.272)[self.hardest_hadron_theta > 100]
+                       ], 
+                      np.linspace(0, 4500, 251), 
+                      labels=['All', '$\theta > 100$'],
+                      ylog=True, 
+                      x_label='$p$ (MeV)')
+
         plt.plot_hists([self.hardest_hadron_ke[(self.hardest_hadron_theta > 25) &
                                                (self.hardest_hadron_theta < 35) 
                                               ],
