@@ -17,7 +17,7 @@ from matplotlib.colors import LogNorm
 from numpy import linalg as la
 from scipy.stats import norm
 
-class PhotoNuclearAnalysis(object) : 
+class TargetPhotoNuclearAnalysis(object) : 
 
     def __init__(self) : 
 
