@@ -3,10 +3,12 @@ import numpy as np
 import ROOT as r
 import matplotlib
 import matplotlib.pyplot as plt
-#import root_numpy as rnp
+import root_numpy as rnp
 
 from itertools import izip
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.colors import LogNorm
+
 
 class Plotter(object):
 
@@ -28,13 +30,7 @@ class Plotter(object):
         name = None
         if 'name' in params: 
             name = params['name']
-
-        #if ('root' in params): 
-        #    histo = r.TH1F(name, name, len(bins), np.amin(bins), np.amax(bins))
-        #    rnp.fill_hist(histo, values)
-        #    histo.Scale(1/histo.Integral(), 'width')
-        #    histo.Write()
-            
+ 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 10))
         
         label=None
@@ -59,6 +55,22 @@ class Plotter(object):
         self.pdf.savefig(bbox_inches='tight')
         plt.close()
 
+    def plot_hist2d(self, x_values, y_values, bins_x, bins_y, **params):
+
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 10))
+        
+        if 'x_label' in params:
+            ax.set_xlabel(params['x_label'])
+
+        if 'y_label' in params:
+            ax.set_ylabel(params['y_label'])
+        im = ax.hist2d(x_values, y_values, bins=[bins_x, bins_y], norm=LogNorm())
+
+        fig.colorbar(im[3], ax=ax) 
+        
+        self.pdf.savefig(bbox_inches='tight')
+        plt.close()
+
     def plot_hists(self, values, bins, **params):
     
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 10))
@@ -79,11 +91,15 @@ class Plotter(object):
         labels = None
         if 'labels' in params:
             labels = params['labels']
- 
+
+        label_loc=0
+        if 'label_loc' in params: 
+            label_loc=params['label_loc']
+
         for x_arr, label in izip(values, labels):
             ax.hist(x_arr, bins, histtype='step', lw=1.5, normed=norm, label=label)
 
-        if labels: ax.legend()
+        if labels: ax.legend(loc=label_loc)
 
         self.pdf.savefig(bbox_inches='tight')
         plt.close()
@@ -153,6 +169,11 @@ class Plotter(object):
         self.pdf.savefig(bbox_inches='tight')
         plt.close()
 
+    def create_root_hist(self, name, values, bins, x_min, x_max, x_label):
+        histo = r.TH1F(name, name, bins, x_min, x_max)
+        histo.GetXaxis().SetTitle(x_label)
+        rnp.fill_hist(histo, values)
+        histo.Write()
 
     def close(self):
         self.pdf.close()
