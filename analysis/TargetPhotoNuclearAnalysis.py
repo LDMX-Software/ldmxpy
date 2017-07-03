@@ -11,6 +11,7 @@ class TargetPhotoNuclearAnalysis(object) :
 
     def __init__(self) : 
         self.initialize()
+        self.file_name = ''
 
     def calc_sig_eff(self, sig, min, max, step, invert) :
         
@@ -40,6 +41,7 @@ class TargetPhotoNuclearAnalysis(object) :
 
         self.ntuple = {}
         self.variables = [
+                'events',
                 'pn_gamma_energy', 'pn_particle_mult', 'pn_interaction_z', 
                 'track_count', 'stub_count', 'axial_count', 
                 'ecal_hit_energy', 'total_ecal_energy', 'passes_ecal_veto',
@@ -54,7 +56,6 @@ class TargetPhotoNuclearAnalysis(object) :
         for variable in self.variables: 
             self.ntuple[variable] = []
 
-        self.events              = []
         self.target_total_energy = []
         
         self.event_count = -1
@@ -64,7 +65,13 @@ class TargetPhotoNuclearAnalysis(object) :
     def process(self, event) :
         
         self.event_count += 1
+        self.ntuple['events'].append(event.get_event_number())
         #print "Event: %s" % self.event_count
+
+        if self.event_count == 1: 
+            self.file_prefix = event.get_file_name()[
+                    event.get_file_name().rfind('/') + 1:-5]
+            print self.file_prefix
 
         # Get the collection of MC particles from the even
         particles = event.get_collection('SimParticles_sim')
@@ -187,7 +194,7 @@ class TargetPhotoNuclearAnalysis(object) :
                 total_down_tp_energy += trigger_pad_hit.getEdep()
             if (trigger_pad_hit.getPosition()[2] < 0): 
                 total_up_tp_energy += trigger_pad_hit.getEdep()
-
+    
         self.ntuple['down_tp_energy'].append(total_down_tp_energy)
         self.ntuple['up_tp_energy'].append(total_up_tp_energy)
 
@@ -274,13 +281,14 @@ class TargetPhotoNuclearAnalysis(object) :
         for variable in self.variables: 
             self.ntuple[variable] = np.array(self.ntuple[variable])
 
-        plt = Plotter.Plotter("photo_nuclear_analysis")
+        plt = Plotter.Plotter(self.file_prefix + '_plots')
 
         single_track = self.ntuple['track_count'] == 1
         ecal_veto = self.ntuple['passes_ecal_veto'] == 1
         hcal_veto = self.ntuple['passes_hcal_veto'] == 1
         basic_veto = single_track & ecal_veto & hcal_veto
-        
+        cuts = { 'Single track':single_track, 'Ecal veto':ecal_veto, 'Hcal veto':hcal_veto, 'Basic veto':basic_veto }
+
         plt.plot_hists([
                         self.ntuple['pn_gamma_energy'],
                         self.ntuple['pn_gamma_energy'][single_track],
@@ -298,6 +306,11 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['pn_gamma_energy'], 
                              160, 0, 4000,
                              'E(#gamma) (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('pn_gamma_energy - %s' % name, 
+                                 self.ntuple['pn_gamma_energy'][cut], 
+                                 160, 0, 4000,
+                                 'E(#gamma) (MeV)')
 
         plt.plot_hists([
                         self.ntuple['pn_particle_mult'],
@@ -311,6 +324,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='PN Multiplicity')
          
+        plt.create_root_hist('pn_particle_mult', 
+                             self.ntuple['pn_particle_mult'], 
+                             120, 0, 120,
+                             'PN Multiplicity')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('pn_particle_mult - %s' % name, 
+                                 self.ntuple['pn_particle_mult'][cut], 
+                                 120, 0, 120,
+                                 'PN Multiplicity')
+
         plt.plot_hists([
                         self.ntuple['pn_interaction_z'],
                         self.ntuple['pn_interaction_z'][single_track],
@@ -335,6 +358,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='PN $\gamma$ Interaction Point z (mm)')
 
+        plt.create_root_hist('pn_interaction_z', 
+                             self.ntuple['pn_interaction_z'], 
+                             450, -1, 1,
+                             'PN $\gamma$ Interaction Point z (mm)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('pn_interaction_z - %s' % name, 
+                                 self.ntuple['pn_interaction_z'][cut], 
+                                 450, -1, 1,
+                                 'PN $\gamma$ Interaction Point z (mm)')
+
         plt.plot_hists([
                         self.ntuple['lead_hadron_ke'],
                         self.ntuple['lead_hadron_ke'][single_track],
@@ -347,6 +380,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading Hadron Kinetic Energy (MeV)')
 
+        plt.create_root_hist('lead_hadron_ke', 
+                             self.ntuple['lead_hadron_ke'], 
+                             160, 0, 4000,
+                             'Leading Hadron Kinetic Energy (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_hadron_ke - %s' % name, 
+                                 self.ntuple['lead_hadron_ke'][cut], 
+                                 160, 0, 4000,
+                                 'Leading Hadron Kinetic Energy (MeV)')
+
         plt.plot_hists([
                         self.ntuple['lead_hadron_theta'],
                         self.ntuple['lead_hadron_theta'][single_track],
@@ -358,6 +401,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
                       ylog=True,
                       x_label='Leading Hadron Theta (degrees)')
+
+        plt.create_root_hist('lead_hadron_theta', 
+                             self.ntuple['lead_hadron_theta'], 
+                             160, 0, 4000,
+                             'Leading Hadron Theta (degrees)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_hadron_theta - %s' % name, 
+                                 self.ntuple['lead_hadron_theta'][cut], 
+                                 160, 0, 4000,
+                                 'Leading Hadron Theta (degrees)')
 
         plt.plot_hist2d(self.ntuple['lead_hadron_ke'], 
                         self.ntuple['lead_hadron_theta'], 
@@ -378,6 +431,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading Hadron Momentum (MeV)')
 
+        plt.create_root_hist('lead_hadron_p', 
+                             self.ntuple['lead_hadron_p'], 
+                             160, 0, 4000,
+                             'Leading Hadron Momentum (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_hadron_p - %s' % name, 
+                                 self.ntuple['lead_hadron_p'][cut], 
+                                 160, 0, 4000,
+                                 'Leading Hadron Momentum (MeV)')
+
         plt.plot_hists([
                         self.ntuple['lead_proton_ke'],
                         self.ntuple['lead_proton_ke'][single_track],
@@ -390,6 +453,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading $p$ Kinetic Energy (MeV)')
 
+        plt.create_root_hist('lead_proton_ke', 
+                             self.ntuple['lead_proton_ke'], 
+                             160, 0, 4000,
+                             'Leading $p$ Kinetic Energy (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_proton_ke - %s' % name, 
+                                 self.ntuple['lead_proton_ke'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $p$ Kinetic Energy (MeV)')
+
         plt.plot_hists([
                         self.ntuple['lead_proton_theta'],
                         self.ntuple['lead_proton_theta'][single_track],
@@ -401,6 +474,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
                       ylog=True,
                       x_label='Leading $p$ Theta (degrees)')
+
+        plt.create_root_hist('lead_proton_theta', 
+                             self.ntuple['lead_proton_theta'], 
+                             160, 0, 4000,
+                             'Leading $p$ Theta (degrees)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_proton_theta - %s' % name, 
+                                 self.ntuple['lead_proton_theta'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $p$ Theta (degrees)')
 
         plt.plot_hist2d(self.ntuple['lead_proton_ke'], 
                         self.ntuple['lead_proton_theta'], 
@@ -421,6 +504,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading $p$ Momentum (MeV)')
 
+        plt.create_root_hist('lead_proton_p', 
+                             self.ntuple['lead_proton_p'], 
+                             160, 0, 4000,
+                             'Leading $p$ Momentum (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_proton_p - %s' % name, 
+                                 self.ntuple['lead_proton_p'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $p$ Momentum (MeV)')
+
         plt.plot_hists([
                         self.ntuple['lead_neutron_ke'],
                         self.ntuple['lead_neutron_ke'][single_track],
@@ -433,6 +526,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading $n$ Kinetic Energy')
 
+        plt.create_root_hist('lead_neutron_ke', 
+                             self.ntuple['lead_neutron_ke'], 
+                             160, 0, 4000,
+                             'Leading $n$ Kinetic Energy (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_neutron_ke - %s' % name, 
+                                 self.ntuple['lead_neutron_ke'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $n$ Kinetic Energy (MeV)')
+
         plt.plot_hists([
                         self.ntuple['lead_neutron_theta'],
                         self.ntuple['lead_neutron_theta'][single_track],
@@ -444,6 +547,17 @@ class TargetPhotoNuclearAnalysis(object) :
                       labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
                       ylog=True,
                       x_label='Leading $n$ Theta (degrees)')
+        
+        plt.create_root_hist('lead_neutron_theta', 
+                             self.ntuple['lead_neutron_theta'], 
+                             160, 0, 4000,
+                             'Leading $n$ Theta (degrees)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_neutron_theta - %s' % name, 
+                                 self.ntuple['lead_neutron_theta'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $n$ Theta (degrees)')
+
 
         plt.plot_hist2d(self.ntuple['lead_neutron_ke'], 
                         self.ntuple['lead_neutron_theta'], 
@@ -464,6 +578,17 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading $n$ Momentum (MeV)')
 
+        plt.create_root_hist('lead_neutron_p', 
+                             self.ntuple['lead_neutron_p'], 
+                             160, 0, 4000,
+                             'Leading $n$ Momentum (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_neutron_p - %s' % name, 
+                                 self.ntuple['lead_neutron_p'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $n$ Momentum (MeV)')
+
+
         plt.plot_hists([
                         self.ntuple['lead_pion_ke'],
                         self.ntuple['lead_pion_ke'][single_track],
@@ -475,7 +600,17 @@ class TargetPhotoNuclearAnalysis(object) :
                       labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
                       ylog=True,
                       x_label='Leading $\pi$ Kinetic Energy')
-        
+       
+        plt.create_root_hist('lead_pion_ke', 
+                             self.ntuple['lead_pion_ke'], 
+                             160, 0, 4000,
+                             'Leading $\pi$ Kinetic Energy (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_pion_ke - %s' % name, 
+                                 self.ntuple['lead_pion_ke'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $\pi$ Kinetic Energy (MeV)')
+
         plt.plot_hists([
                         self.ntuple['lead_pion_theta'],
                         self.ntuple['lead_pion_theta'][single_track],
@@ -487,6 +622,17 @@ class TargetPhotoNuclearAnalysis(object) :
                       labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
                       ylog=True,
                       x_label='Leading $\pi$ Theta (degrees)')
+
+        
+        plt.create_root_hist('lead_pion_theta', 
+                             self.ntuple['lead_pion_theta'], 
+                             160, 0, 4000,
+                             'Leading $\pi$ Theta (degrees)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_pion_theta - %s' % name, 
+                                 self.ntuple['lead_pion_theta'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $\pi$ Theta (degrees)')
 
         plt.plot_hist2d(self.ntuple['lead_pion_ke'], 
                         self.ntuple['lead_pion_theta'], 
@@ -507,6 +653,16 @@ class TargetPhotoNuclearAnalysis(object) :
                       ylog=True,
                       x_label='Leading $\pi$ Momentum (MeV)')
 
+        plt.create_root_hist('lead_pion_p', 
+                             self.ntuple['lead_pion_p'], 
+                             160, 0, 4000,
+                             'Leading $\pi$ Momentum (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_pion_p - %s' % name, 
+                                 self.ntuple['lead_pion_p'][cut], 
+                                 160, 0, 4000,
+                                 'Leading $\pi$ Momentum (MeV)')
+
         plt.plot_hists([
                         self.ntuple['track_count'],
                         self.ntuple['track_count'][single_track],
@@ -523,6 +679,11 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['track_count'], 
                              10, 0, 10,
                              'Track Multiplicity')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('track_count - %s' % name, 
+                                 self.ntuple['track_count'][cut], 
+                                 10, 0, 10,
+                                 'Track Multiplicity')
 
         plt.plot_hists([
                         self.ntuple['stub_count'],
@@ -540,6 +701,11 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['stub_count'], 
                              10, 0, 10,
                              'Stub Multiplicity')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('stub_count - %s' % name, 
+                                 self.ntuple['stub_count'][cut], 
+                                 10, 0, 10,
+                                 'Stub Multiplicity')
 
         plt.plot_hists([
                         self.ntuple['axial_count'],
@@ -557,6 +723,11 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['axial_count'], 
                              10, 0, 10,
                              'Axial Multiplicity')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('axial_count - %s' % name, 
+                                 self.ntuple['axial_count'][cut], 
+                                 10, 0, 10,
+                                 'Axial Multiplicity')
 
         plt.plot_hists([
                         self.ntuple['down_tp_energy'],
@@ -574,6 +745,12 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['down_tp_energy'], 
                              200, 0, 100,
                              'Energy Deposited in Downstream Trigger Pad (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('down_tp_energy - %s' % name, 
+                                 self.ntuple['down_tp_energy'][cut], 
+                                 200, 0, 100,
+                                 'Energy Deposited in Downstream Trigger Pad (MeV)')
+        
         plt.plot_hists([
                         self.ntuple['up_tp_energy'],
                         self.ntuple['up_tp_energy'][single_track],
@@ -590,6 +767,11 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['up_tp_energy'], 
                              200, 0, 100,
                              'Energy Deposited in Upstream Trigger Pad (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('up_tp_energy - %s' % name, 
+                                 self.ntuple['up_tp_energy'][cut], 
+                                 200, 0, 100,
+                                 'Energy Deposited in Upstream Trigger Pad (MeV)')
        
         plt.plot_hist2d(self.ntuple['up_tp_energy'], 
                         self.ntuple['down_tp_energy'], 
@@ -614,6 +796,12 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['total_ecal_energy'], 
                              140, 0, 140,
                              'Energy Deposited in Upstream Trigger Pad (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('total_ecal_energy - %s' % name, 
+                                 self.ntuple['total_ecal_energy'][cut], 
+                                 140, 0, 140,
+                                 'Energy Deposited in Upstream Trigger Pad (MeV)')
+        
         plt.plot_hists([
                         self.ntuple['ecal_hit_energy'],
                         self.ntuple['ecal_hit_energy'][single_track],
@@ -630,6 +818,12 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['ecal_hit_energy'], 
                              200, 0, 100,
                              'Readout Hit Energy Deposited in Ecal Si (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('ecal_hit_energy - %s' % name, 
+                                 self.ntuple['ecal_hit_energy'][cut], 
+                                 200, 0, 100,
+                                 'Readout Hit Energy Deposited in Ecal Si (MeV)')
+
         plt.plot_hists([
                         self.ntuple['hcal_hit_energy'],
                         self.ntuple['hcal_hit_energy'][single_track],
@@ -646,6 +840,12 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['hcal_hit_energy'], 
                              300, 0, 150,
                              'Readout Hit Energy Deposited in Ecal Si (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('hcal_hit_energy - %s' % name, 
+                                 self.ntuple['hcal_hit_energy'][cut], 
+                                 300, 0, 150,
+                                 'Readout Hit Energy Deposited in Ecal Si (MeV)')
+
         plt.plot_hists([
                         self.ntuple['total_hcal_energy'],
                         self.ntuple['total_hcal_energy'][single_track],
@@ -662,41 +862,56 @@ class TargetPhotoNuclearAnalysis(object) :
                              self.ntuple['total_hcal_energy'], 
                              400, 0, 400,
                              'Total Energy Deposited in Hcal Scint (MeV)')
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('total_hcal_energy - %s' % name, 
+                                 self.ntuple['total_hcal_energy'][cut], 
+                                 400, 0, 400,
+                                 'Total Energy Deposited in Hcal Scint (MeV)')
 
         plt.close()
        
+        output = file(self.file_prefix + "_results.txt", 'w')
         cut = self.ntuple['track_count'] == 1
         pass_track_veto = len(self.ntuple['track_count'][cut])
         pass_track_veto_frac = pass_track_veto/len(self.ntuple['track_count'])
-        print 'Events that pass track veto: %s/%s = %s' % (pass_track_veto,
-                len(self.ntuple['track_count']), pass_track_veto_frac)
+        output.write('Events that pass track veto: %s/%s = %s\n' % (
+            pass_track_veto, 
+            len(self.ntuple['track_count']), pass_track_veto_frac))
 
         cut = self.ntuple['stub_count'] == 1
         pass_stub_veto = len(self.ntuple['stub_count'][cut])
         pass_stub_veto_frac = pass_stub_veto/len(self.ntuple['stub_count'])
-        print 'Events passing stub veto: %s/%s = %s' % (pass_stub_veto, 
-                len(self.ntuple['stub_count']), pass_stub_veto_frac)
+        output.write('Events passing stub veto: %s/%s = %s\n' % (
+            pass_stub_veto, 
+            len(self.ntuple['stub_count']), pass_stub_veto_frac))
 
         cut = self.ntuple['passes_ecal_veto'] == 1
         pass_ecal_veto = len(self.ntuple['passes_ecal_veto'][cut])
         pass_ecal_veto_frac = pass_ecal_veto/len(self.ntuple['passes_ecal_veto'])
-        print 'Events passing Ecal veto: %s/%s = %s' % (pass_ecal_veto, 
-                len(self.ntuple['passes_ecal_veto']), pass_ecal_veto_frac)
+        output.write('Events passing Ecal veto: %s/%s = %s\n' % (
+            pass_ecal_veto, 
+            len(self.ntuple['passes_ecal_veto']), pass_ecal_veto_frac))
 
         cut = self.ntuple['passes_hcal_veto'] == 1
         pass_hcal_veto = len(self.ntuple['passes_hcal_veto'][cut])
         pass_hcal_veto_frac = pass_hcal_veto/len(self.ntuple['passes_hcal_veto'])
-        print 'Events passing Hcal veto: %s/%s = %s' % (pass_hcal_veto, 
-                len(self.ntuple['passes_hcal_veto']), pass_hcal_veto_frac)
+        output.write('Events passing Hcal veto: %s/%s = %s\n' % (
+            pass_hcal_veto, 
+            len(self.ntuple['passes_hcal_veto']), pass_hcal_veto_frac))
 
         cut = ((self.ntuple['track_count'] == 1) 
                 & (self.ntuple['passes_hcal_veto'] == 1)
                 & (self.ntuple['passes_ecal_veto'] == 1))
         pass_veto = len(self.ntuple['passes_hcal_veto'][cut])
         pass_veto_frac = pass_veto/len(self.ntuple['passes_hcal_veto'])
-        print 'Events passing veto: %s/%s = %s' % (pass_veto, 
-                len(self.ntuple['passes_hcal_veto']), pass_veto_frac)
-        
+        output.write('Events passing veto: %s/%s = %s\n' % (pass_veto, 
+                len(self.ntuple['passes_hcal_veto']), pass_veto_frac))
+       
+        output.write('Events failing veto\n')
+        for event_n in self.ntuple['events'][cut]:
+            output.write('Event: %s\n' % event_n)
+
+        output.close()
         '''
         output = file(self.file_prefix + "_results.txt", 'w')
         output.write( "Total events processed: %s\n" % len(self.ntuple['track_count']))
