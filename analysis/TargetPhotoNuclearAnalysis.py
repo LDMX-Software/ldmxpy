@@ -404,12 +404,12 @@ class TargetPhotoNuclearAnalysis(object) :
 
         plt.create_root_hist('lead_hadron_theta', 
                              self.ntuple['lead_hadron_theta'], 
-                             160, 0, 4000,
+                             360, 0, 180,
                              'Leading Hadron Theta (degrees)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_hadron_theta - %s' % name, 
                                  self.ntuple['lead_hadron_theta'][cut], 
-                                 160, 0, 4000,
+                                 360, 0, 180,
                                  'Leading Hadron Theta (degrees)')
 
         plt.plot_hist2d(self.ntuple['lead_hadron_ke'], 
@@ -456,12 +456,12 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_proton_ke', 
                              self.ntuple['lead_proton_ke'], 
                              160, 0, 4000,
-                             'Leading $p$ Kinetic Energy (MeV)')
+                             'Leading #p Kinetic Energy (MeV)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_proton_ke - %s' % name, 
                                  self.ntuple['lead_proton_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading $p$ Kinetic Energy (MeV)')
+                                 'Leading #p Kinetic Energy (MeV)')
 
         plt.plot_hists([
                         self.ntuple['lead_proton_theta'],
@@ -477,13 +477,13 @@ class TargetPhotoNuclearAnalysis(object) :
 
         plt.create_root_hist('lead_proton_theta', 
                              self.ntuple['lead_proton_theta'], 
-                             160, 0, 4000,
-                             'Leading $p$ Theta (degrees)')
+                             360, 0, 180,
+                             'Leading #p Theta (degrees)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_proton_theta - %s' % name, 
                                  self.ntuple['lead_proton_theta'][cut], 
-                                 160, 0, 4000,
-                                 'Leading $p$ Theta (degrees)')
+                                 360, 0, 180,
+                                 'Leading #p Theta (degrees)')
 
         plt.plot_hist2d(self.ntuple['lead_proton_ke'], 
                         self.ntuple['lead_proton_theta'], 
@@ -507,12 +507,12 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_proton_p', 
                              self.ntuple['lead_proton_p'], 
                              160, 0, 4000,
-                             'Leading $p$ Momentum (MeV)')
+                             'Leading #p Momentum (MeV)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_proton_p - %s' % name, 
                                  self.ntuple['lead_proton_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading $p$ Momentum (MeV)')
+                                 'Leading #p Momentum (MeV)')
 
         plt.plot_hists([
                         self.ntuple['lead_neutron_ke'],
@@ -529,12 +529,12 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_neutron_ke', 
                              self.ntuple['lead_neutron_ke'], 
                              160, 0, 4000,
-                             'Leading $n$ Kinetic Energy (MeV)')
+                             'Leading #n Kinetic Energy (MeV)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_neutron_ke - %s' % name, 
                                  self.ntuple['lead_neutron_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading $n$ Kinetic Energy (MeV)')
+                                 'Leading #n Kinetic Energy (MeV)')
 
         plt.plot_hists([
                         self.ntuple['lead_neutron_theta'],
@@ -550,13 +550,13 @@ class TargetPhotoNuclearAnalysis(object) :
         
         plt.create_root_hist('lead_neutron_theta', 
                              self.ntuple['lead_neutron_theta'], 
-                             160, 0, 4000,
-                             'Leading $n$ Theta (degrees)')
+                             360, 0, 180,
+                             'Leading #n Theta (degrees)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_neutron_theta - %s' % name, 
                                  self.ntuple['lead_neutron_theta'][cut], 
-                                 160, 0, 4000,
-                                 'Leading $n$ Theta (degrees)')
+                                 360, 0, 180,
+                                 'Leading #n Theta (degrees)')
 
 
         plt.plot_hist2d(self.ntuple['lead_neutron_ke'], 
@@ -581,12 +581,12 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_neutron_p', 
                              self.ntuple['lead_neutron_p'], 
                              160, 0, 4000,
-                             'Leading $n$ Momentum (MeV)')
+                             'Leading #n Momentum (MeV)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_neutron_p - %s' % name, 
                                  self.ntuple['lead_neutron_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading $n$ Momentum (MeV)')
+                                 'Leading #n Momentum (MeV)')
 
 
         plt.plot_hists([
@@ -604,12 +604,12 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_pion_ke', 
                              self.ntuple['lead_pion_ke'], 
                              160, 0, 4000,
-                             'Leading $\pi$ Kinetic Energy (MeV)')
+                             'Leading #pi Kinetic Energy (MeV)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_pion_ke - %s' % name, 
                                  self.ntuple['lead_pion_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading $\pi$ Kinetic Energy (MeV)')
+                                 'Leading #pi Kinetic Energy (MeV)')
 
         plt.plot_hists([
                         self.ntuple['lead_pion_theta'],
@@ -626,13 +626,13 @@ class TargetPhotoNuclearAnalysis(object) :
         
         plt.create_root_hist('lead_pion_theta', 
                              self.ntuple['lead_pion_theta'], 
-                             160, 0, 4000,
-                             'Leading $\pi$ Theta (degrees)')
+                             360, 0, 180,
+                             'Leading #pi Theta (degrees)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_pion_theta - %s' % name, 
                                  self.ntuple['lead_pion_theta'][cut], 
-                                 160, 0, 4000,
-                                 'Leading $\pi$ Theta (degrees)')
+                                 360, 0, 180,
+                                 'Leading #pi Theta (degrees)')
 
         plt.plot_hist2d(self.ntuple['lead_pion_ke'], 
                         self.ntuple['lead_pion_theta'], 
@@ -656,12 +656,12 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_pion_p', 
                              self.ntuple['lead_pion_p'], 
                              160, 0, 4000,
-                             'Leading $\pi$ Momentum (MeV)')
+                             'Leading #pi Momentum (MeV)')
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_pion_p - %s' % name, 
                                  self.ntuple['lead_pion_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading $\pi$ Momentum (MeV)')
+                                 'Leading #pi Momentum (MeV)')
 
         plt.plot_hists([
                         self.ntuple['track_count'],
