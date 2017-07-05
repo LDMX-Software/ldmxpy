@@ -1,6 +1,7 @@
 from __future__ import division
 
 import math
+import ROOT as r 
 import numpy as np
 import Plotter
 
@@ -25,6 +26,17 @@ class ReconValidation(object):
                 'hcal_hit_energy', 'total_hcal_energy', 'total_hcal_pe',
                 'passes_hcal_veto', 'up_tp_energy', 'down_tp_energy',
         ]
+        self.variables = [
+                'events',
+                'track_count', 'stub_count', 'axial_count', 
+                'ecal_hit_energy', 'total_ecal_energy', 'passes_ecal_veto',
+                'hcal_hit_energy', 'total_hcal_energy', 'total_hcal_pe',
+                'passes_hcal_veto', 'up_tp_energy', 'down_tp_energy',
+                'total_recoil_hits'
+        ]
+        for layer_n in xrange(0, 10):
+            self.variables.append('total_recoil_hits_l%s' % (layer_n + 1))
+            self.variables.append('total_charge_l%s' % (layer_n + 1))
 
         for variable in self.variables: 
             self.ntuple[variable] = []
@@ -141,7 +153,25 @@ class ReconValidation(object):
             if hcal_veto_result.passesVeto(): 
                 self.ntuple['passes_hcal_veto'].append(1)
             else: self.ntuple['passes_hcal_veto'].append(0)
-    
+   
+        #
+        # Hit Level
+        #
+        
+        recoil_sim_hits = event.get_collection('RecoilSimHits_sim')
+        self.ntuple['total_recoil_hits'].append(recoil_sim_hits.GetEntriesFast())
+        hit_counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        charge_counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        for recoil_sim_hit in recoil_sim_hits:
+            hit_counter[recoil_sim_hit.getLayerID() - 1] += 1
+            charge_counter[recoil_sim_hit.getLayerID() - 1] += recoil_sim_hit.getEdep()
+        
+        for layer_n in xrange(0, 10): 
+            self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)].append(hit_counter[layer_n])
+            self.ntuple['total_charge_l%s' % (layer_n + 1)].append(charge_counter[layer_n])
+
+
     def finalize(self) :
 
         for variable in self.variables: 
@@ -160,7 +190,8 @@ class ReconValidation(object):
         plt.create_root_hist('track_count', 
                              self.ntuple['track_count'], 
                              10, 0, 10,
-                             'Track Multiplicity')
+                             'Track Multiplicity', 
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['stub_count'],
@@ -173,7 +204,8 @@ class ReconValidation(object):
         plt.create_root_hist('stub_count', 
                              self.ntuple['stub_count'], 
                              10, 0, 10,
-                             'Stub Multiplicity')
+                             'Stub Multiplicity',
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['axial_count'],
@@ -186,7 +218,8 @@ class ReconValidation(object):
         plt.create_root_hist('axial_count', 
                              self.ntuple['axial_count'], 
                              10, 0, 10,
-                             'Axial Multiplicity')
+                             'Axial Multiplicity',
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['down_tp_energy'],
@@ -199,7 +232,8 @@ class ReconValidation(object):
         plt.create_root_hist('down_tp_energy', 
                              self.ntuple['down_tp_energy'], 
                              200, 0, 100,
-                             'Energy Deposited in Downstream Trigger Pad (MeV)')
+                             'Energy Deposited in Downstream Trigger Pad (MeV)',
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['up_tp_energy'],
@@ -212,7 +246,8 @@ class ReconValidation(object):
         plt.create_root_hist('up_tp_energy', 
                              self.ntuple['up_tp_energy'], 
                              200, 0, 100,
-                             'Energy Deposited in Upstream Trigger Pad (MeV)')
+                             'Energy Deposited in Upstream Trigger Pad (MeV)',
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['total_ecal_energy'],
@@ -225,7 +260,8 @@ class ReconValidation(object):
         plt.create_root_hist('total_ecal_energy', 
                              self.ntuple['total_ecal_energy'], 
                              140, 0, 140,
-                             'Energy Deposited in Upstream Trigger Pad (MeV)')
+                             'Energy Deposited in Upstream Trigger Pad (MeV)',
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['ecal_hit_energy'],
@@ -238,7 +274,8 @@ class ReconValidation(object):
         plt.create_root_hist('ecal_hit_energy', 
                              self.ntuple['ecal_hit_energy'], 
                              200, 0, 100,
-                             'Readout Hit Energy Deposited in Ecal Si (MeV)')
+                             'Readout Hit Energy Deposited in Ecal Si (MeV)',
+                             color=r.kRed+2)
        
         plt.plot_hists([
                         self.ntuple['hcal_hit_energy'],
@@ -251,7 +288,8 @@ class ReconValidation(object):
         plt.create_root_hist('hcal_hit_energy', 
                              self.ntuple['hcal_hit_energy'], 
                              300, 0, 150,
-                             'Readout Hit Energy Deposited in Ecal Si (MeV)')
+                             'Readout Hit Energy Deposited in Ecal Si (MeV)',
+                             color=r.kRed+2)
         
         plt.plot_hists([
                         self.ntuple['total_hcal_energy'],
@@ -264,6 +302,49 @@ class ReconValidation(object):
         plt.create_root_hist('total_hcal_energy', 
                              self.ntuple['total_hcal_energy'], 
                              400, 0, 400,
-                             'Total Energy Deposited in Hcal Scint (MeV)')
+                             'Total Energy Deposited in Hcal Scint (MeV)',
+                             color=r.kRed+2)
+
+        plt.plot_hists([
+                        self.ntuple['total_recoil_hits'],
+                       ],
+                       np.linspace(0, 150, 151),
+                       labels=['All'],
+                       ylog=True,
+                       x_label='Recoil Hit Multiplicity')
+
+        plt.create_root_hist('total_recoil_hits', 
+                             self.ntuple['total_recoil_hits'], 
+                             150, 0, 150,
+                             'Recoil Hit Multiplicity',
+                             color=r.kRed+2)
+
+        for layer_n in xrange(0, 10): 
+            plt.plot_hists([
+                self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)],
+                ],
+                np.linspace(0, 150, 151),
+                labels=['All'],
+                ylog=True,
+                x_label='Recoil Hit Layer %s Multiplicity' % (layer_n + 1))
+
+            plt.plot_hists([
+                self.ntuple['total_charge_l%s' % (layer_n + 1)],
+                ],
+                np.linspace(0, 50, 151),
+                labels=['All'],
+                ylog=True,
+                x_label='Total Charge Layer %s' % (layer_n + 1))
+
+            plt.create_root_hist('total_recoil_hits_l%s' % (layer_n + 1), 
+                                 self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)],
+                                 150, 0, 150,
+                                 'Recoil Hit Layer %s Multiplicity' % (layer_n + 1), 
+                                 color=r.kRed+2)
+            plt.create_root_hist('total_charge_l%s' % (layer_n + 1), 
+                                 self.ntuple['total_charge_l%s' % (layer_n + 1)],
+                                 150, 0, 50,
+                                 'Total Charge Layer %s' % (layer_n + 1),
+                                 color=r.kRed+2)
 
         plt.close()
