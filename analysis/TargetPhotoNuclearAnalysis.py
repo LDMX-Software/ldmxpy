@@ -1,6 +1,7 @@
 from __future__ import division
 
 import math
+import ROOT as r
 import numpy as np
 import Plotter
 
@@ -50,11 +51,17 @@ class TargetPhotoNuclearAnalysis(object) :
                 'lead_hadron_ke', 'lead_hadron_theta', 'lead_hadron_p', 
                 'lead_pion_ke', 'lead_pion_theta', 'lead_pion_p', 
                 'lead_neutron_ke', 'lead_neutron_theta', 'lead_neutron_p', 
-                'lead_proton_ke', 'lead_proton_theta', 'lead_proton_p', 
+                'lead_proton_ke', 'lead_proton_theta', 'lead_proton_p',
+                'total_recoil_hits'
         ]
+        for layer_n in xrange(0, 10):
+            self.variables.append('total_recoil_hits_l%s' % (layer_n + 1))
+            self.variables.append('total_charge_l%s' % (layer_n + 1))
 
         for variable in self.variables: 
             self.ntuple[variable] = []
+    
+        self.colors = [r.kAzure + 2, r.kRed + 2, r.kGreen + 2, r.kViolet + 6, r.kOrange + 7]
 
         self.target_total_energy = []
         
@@ -271,11 +278,23 @@ class TargetPhotoNuclearAnalysis(object) :
                 self.ntuple['passes_hcal_veto'].append(1)
             else: self.ntuple['passes_hcal_veto'].append(0)
         
-
-        '''
-        recoil_sim_hits = event.get_collection('RecoilSimHits')
-        '''
+        #
+        # Hit Level
+        #
         
+        recoil_sim_hits = event.get_collection('RecoilSimHits_sim')
+        self.ntuple['total_recoil_hits'].append(recoil_sim_hits.GetEntriesFast())
+        hit_counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        charge_counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        for recoil_sim_hit in recoil_sim_hits:
+            hit_counter[recoil_sim_hit.getLayerID() - 1] += 1
+            charge_counter[recoil_sim_hit.getLayerID() - 1] += recoil_sim_hit.getEdep()
+        
+        for layer_n in xrange(0, 10): 
+            self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)].append(hit_counter[layer_n])
+            self.ntuple['total_charge_l%s' % (layer_n + 1)].append(charge_counter[layer_n])
+
     def finalize(self) :
 
         for variable in self.variables: 
@@ -305,12 +324,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('pn_gamma_energy', 
                              self.ntuple['pn_gamma_energy'], 
                              160, 0, 4000,
-                             'E(#gamma) (MeV)')
+                             'E(#gamma) (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('pn_gamma_energy - %s' % name, 
                                  self.ntuple['pn_gamma_energy'][cut], 
                                  160, 0, 4000,
-                                 'E(#gamma) (MeV)')
+                                 'E(#gamma) (MeV)', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['pn_particle_mult'],
@@ -327,12 +350,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('pn_particle_mult', 
                              self.ntuple['pn_particle_mult'], 
                              120, 0, 120,
-                             'PN Multiplicity')
+                             'PN Multiplicity', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('pn_particle_mult - %s' % name, 
                                  self.ntuple['pn_particle_mult'][cut], 
                                  120, 0, 120,
-                                 'PN Multiplicity')
+                                 'PN Multiplicity', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['pn_interaction_z'],
@@ -361,12 +388,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('pn_interaction_z', 
                              self.ntuple['pn_interaction_z'], 
                              450, -1, 1,
-                             'PN $\gamma$ Interaction Point z (mm)')
+                             'PN $\gamma$ Interaction Point z (mm)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('pn_interaction_z - %s' % name, 
                                  self.ntuple['pn_interaction_z'][cut], 
                                  450, -1, 1,
-                                 'PN $\gamma$ Interaction Point z (mm)')
+                                 'PN $\gamma$ Interaction Point z (mm)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_hadron_ke'],
@@ -383,12 +414,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_hadron_ke', 
                              self.ntuple['lead_hadron_ke'], 
                              160, 0, 4000,
-                             'Leading Hadron Kinetic Energy (MeV)')
+                             'Leading Hadron Kinetic Energy (MeV)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_hadron_ke - %s' % name, 
                                  self.ntuple['lead_hadron_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading Hadron Kinetic Energy (MeV)')
+                                 'Leading Hadron Kinetic Energy (MeV)', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_hadron_theta'],
@@ -405,12 +440,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_hadron_theta', 
                              self.ntuple['lead_hadron_theta'], 
                              360, 0, 180,
-                             'Leading Hadron Theta (degrees)')
+                             'Leading Hadron Theta (degrees)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_hadron_theta - %s' % name, 
                                  self.ntuple['lead_hadron_theta'][cut], 
                                  360, 0, 180,
-                                 'Leading Hadron Theta (degrees)')
+                                 'Leading Hadron Theta (degrees)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hist2d(self.ntuple['lead_hadron_ke'], 
                         self.ntuple['lead_hadron_theta'], 
@@ -434,12 +473,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_hadron_p', 
                              self.ntuple['lead_hadron_p'], 
                              160, 0, 4000,
-                             'Leading Hadron Momentum (MeV)')
+                             'Leading Hadron Momentum (MeV)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_hadron_p - %s' % name, 
                                  self.ntuple['lead_hadron_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading Hadron Momentum (MeV)')
+                                 'Leading Hadron Momentum (MeV)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_proton_ke'],
@@ -456,12 +499,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_proton_ke', 
                              self.ntuple['lead_proton_ke'], 
                              160, 0, 4000,
-                             'Leading #p Kinetic Energy (MeV)')
+                             'Leading #p Kinetic Energy (MeV)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_proton_ke - %s' % name, 
                                  self.ntuple['lead_proton_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading #p Kinetic Energy (MeV)')
+                                 'Leading #p Kinetic Energy (MeV)', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_proton_theta'],
@@ -478,12 +525,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_proton_theta', 
                              self.ntuple['lead_proton_theta'], 
                              360, 0, 180,
-                             'Leading #p Theta (degrees)')
+                             'Leading #p Theta (degrees)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_proton_theta - %s' % name, 
                                  self.ntuple['lead_proton_theta'][cut], 
                                  360, 0, 180,
-                                 'Leading #p Theta (degrees)')
+                                 'Leading #p Theta (degrees)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hist2d(self.ntuple['lead_proton_ke'], 
                         self.ntuple['lead_proton_theta'], 
@@ -507,12 +558,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_proton_p', 
                              self.ntuple['lead_proton_p'], 
                              160, 0, 4000,
-                             'Leading #p Momentum (MeV)')
+                             'Leading #p Momentum (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_proton_p - %s' % name, 
                                  self.ntuple['lead_proton_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading #p Momentum (MeV)')
+                                 'Leading #p Momentum (MeV)', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_neutron_ke'],
@@ -529,12 +584,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_neutron_ke', 
                              self.ntuple['lead_neutron_ke'], 
                              160, 0, 4000,
-                             'Leading #n Kinetic Energy (MeV)')
+                             'Leading #n Kinetic Energy (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_neutron_ke - %s' % name, 
                                  self.ntuple['lead_neutron_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading #n Kinetic Energy (MeV)')
+                                 'Leading #n Kinetic Energy (MeV)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_neutron_theta'],
@@ -551,12 +610,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_neutron_theta', 
                              self.ntuple['lead_neutron_theta'], 
                              360, 0, 180,
-                             'Leading #n Theta (degrees)')
+                             'Leading #n Theta (degrees)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_neutron_theta - %s' % name, 
                                  self.ntuple['lead_neutron_theta'][cut], 
                                  360, 0, 180,
-                                 'Leading #n Theta (degrees)')
+                                 'Leading #n Theta (degrees)',
+                                 color=self.colors[index])
+            index += 1
 
 
         plt.plot_hist2d(self.ntuple['lead_neutron_ke'], 
@@ -581,13 +644,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_neutron_p', 
                              self.ntuple['lead_neutron_p'], 
                              160, 0, 4000,
-                             'Leading #n Momentum (MeV)')
+                             'Leading #n Momentum (MeV)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_neutron_p - %s' % name, 
                                  self.ntuple['lead_neutron_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading #n Momentum (MeV)')
-
+                                 'Leading #n Momentum (MeV)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_pion_ke'],
@@ -604,12 +670,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_pion_ke', 
                              self.ntuple['lead_pion_ke'], 
                              160, 0, 4000,
-                             'Leading #pi Kinetic Energy (MeV)')
+                             'Leading #pi Kinetic Energy (MeV)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_pion_ke - %s' % name, 
                                  self.ntuple['lead_pion_ke'][cut], 
                                  160, 0, 4000,
-                                 'Leading #pi Kinetic Energy (MeV)')
+                                 'Leading #pi Kinetic Energy (MeV)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['lead_pion_theta'],
@@ -627,12 +697,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_pion_theta', 
                              self.ntuple['lead_pion_theta'], 
                              360, 0, 180,
-                             'Leading #pi Theta (degrees)')
+                             'Leading #pi Theta (degrees)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_pion_theta - %s' % name, 
                                  self.ntuple['lead_pion_theta'][cut], 
                                  360, 0, 180,
-                                 'Leading #pi Theta (degrees)')
+                                 'Leading #pi Theta (degrees)', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hist2d(self.ntuple['lead_pion_ke'], 
                         self.ntuple['lead_pion_theta'], 
@@ -656,12 +730,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('lead_pion_p', 
                              self.ntuple['lead_pion_p'], 
                              160, 0, 4000,
-                             'Leading #pi Momentum (MeV)')
+                             'Leading #pi Momentum (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('lead_pion_p - %s' % name, 
                                  self.ntuple['lead_pion_p'][cut], 
                                  160, 0, 4000,
-                                 'Leading #pi Momentum (MeV)')
+                                 'Leading #pi Momentum (MeV)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['track_count'],
@@ -678,12 +756,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('track_count', 
                              self.ntuple['track_count'], 
                              10, 0, 10,
-                             'Track Multiplicity')
+                             'Track Multiplicity', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('track_count - %s' % name, 
                                  self.ntuple['track_count'][cut], 
                                  10, 0, 10,
-                                 'Track Multiplicity')
+                                 'Track Multiplicity', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['stub_count'],
@@ -700,12 +782,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('stub_count', 
                              self.ntuple['stub_count'], 
                              10, 0, 10,
-                             'Stub Multiplicity')
+                             'Stub Multiplicity', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('stub_count - %s' % name, 
                                  self.ntuple['stub_count'][cut], 
                                  10, 0, 10,
-                                 'Stub Multiplicity')
+                                 'Stub Multiplicity', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['axial_count'],
@@ -722,12 +808,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('axial_count', 
                              self.ntuple['axial_count'], 
                              10, 0, 10,
-                             'Axial Multiplicity')
+                             'Axial Multiplicity', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('axial_count - %s' % name, 
                                  self.ntuple['axial_count'][cut], 
                                  10, 0, 10,
-                                 'Axial Multiplicity')
+                                 'Axial Multiplicity', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['down_tp_energy'],
@@ -744,12 +834,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('down_tp_energy', 
                              self.ntuple['down_tp_energy'], 
                              200, 0, 100,
-                             'Energy Deposited in Downstream Trigger Pad (MeV)')
+                             'Energy Deposited in Downstream Trigger Pad (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('down_tp_energy - %s' % name, 
                                  self.ntuple['down_tp_energy'][cut], 
                                  200, 0, 100,
-                                 'Energy Deposited in Downstream Trigger Pad (MeV)')
+                                 'Energy Deposited in Downstream Trigger Pad (MeV)', 
+                                 color=self.colors[index])
+            index += 1
         
         plt.plot_hists([
                         self.ntuple['up_tp_energy'],
@@ -766,12 +860,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('up_tp_energy', 
                              self.ntuple['up_tp_energy'], 
                              200, 0, 100,
-                             'Energy Deposited in Upstream Trigger Pad (MeV)')
+                             'Energy Deposited in Upstream Trigger Pad (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('up_tp_energy - %s' % name, 
                                  self.ntuple['up_tp_energy'][cut], 
                                  200, 0, 100,
-                                 'Energy Deposited in Upstream Trigger Pad (MeV)')
+                                 'Energy Deposited in Upstream Trigger Pad (MeV)', 
+                                 color=self.colors[index])
+            index += 1
        
         plt.plot_hist2d(self.ntuple['up_tp_energy'], 
                         self.ntuple['down_tp_energy'], 
@@ -795,12 +893,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('total_ecal_energy', 
                              self.ntuple['total_ecal_energy'], 
                              140, 0, 140,
-                             'Energy Deposited in Upstream Trigger Pad (MeV)')
+                             'Energy Deposited in Upstream Trigger Pad (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('total_ecal_energy - %s' % name, 
                                  self.ntuple['total_ecal_energy'][cut], 
                                  140, 0, 140,
-                                 'Energy Deposited in Upstream Trigger Pad (MeV)')
+                                 'Energy Deposited in Upstream Trigger Pad (MeV)',
+                                 color=self.colors[index])
+            index += 1
         
         plt.plot_hists([
                         self.ntuple['ecal_hit_energy'],
@@ -817,12 +919,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('ecal_hit_energy', 
                              self.ntuple['ecal_hit_energy'], 
                              200, 0, 100,
-                             'Readout Hit Energy Deposited in Ecal Si (MeV)')
+                             'Readout Hit Energy Deposited in Ecal Si (MeV)',
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('ecal_hit_energy - %s' % name, 
                                  self.ntuple['ecal_hit_energy'][cut], 
                                  200, 0, 100,
-                                 'Readout Hit Energy Deposited in Ecal Si (MeV)')
+                                 'Readout Hit Energy Deposited in Ecal Si (MeV)', 
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['hcal_hit_energy'],
@@ -839,12 +945,16 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('hcal_hit_energy', 
                              self.ntuple['hcal_hit_energy'], 
                              300, 0, 150,
-                             'Readout Hit Energy Deposited in Ecal Si (MeV)')
+                             'Readout Hit Energy Deposited in Ecal Si (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('hcal_hit_energy - %s' % name, 
                                  self.ntuple['hcal_hit_energy'][cut], 
                                  300, 0, 150,
-                                 'Readout Hit Energy Deposited in Ecal Si (MeV)')
+                                 'Readout Hit Energy Deposited in Ecal Si (MeV)',
+                                 color=self.colors[index])
+            index += 1
 
         plt.plot_hists([
                         self.ntuple['total_hcal_energy'],
@@ -861,12 +971,92 @@ class TargetPhotoNuclearAnalysis(object) :
         plt.create_root_hist('total_hcal_energy', 
                              self.ntuple['total_hcal_energy'], 
                              400, 0, 400,
-                             'Total Energy Deposited in Hcal Scint (MeV)')
+                             'Total Energy Deposited in Hcal Scint (MeV)', 
+                             color=self.colors[0])
+        index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('total_hcal_energy - %s' % name, 
                                  self.ntuple['total_hcal_energy'][cut], 
                                  400, 0, 400,
-                                 'Total Energy Deposited in Hcal Scint (MeV)')
+                                 'Total Energy Deposited in Hcal Scint (MeV)',
+                                 color=self.colors[index])
+            index += 1
+
+        
+        plt.plot_hists([
+                        self.ntuple['total_recoil_hits'],
+                        self.ntuple['total_recoil_hits'][single_track],
+                        self.ntuple['total_recoil_hits'][hcal_veto],
+                        self.ntuple['total_recoil_hits'][ecal_veto],
+                        self.ntuple['total_recoil_hits'][basic_veto]
+                       ],
+                       np.linspace(0, 150, 151),
+                       labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
+                       ylog=True,
+                       x_label='Recoil Hit Multiplicity')
+
+        plt.create_root_hist('total_recoil_hits', 
+                             self.ntuple['total_recoil_hits'], 
+                             150, 0, 150,
+                             'Recoil Hit Multiplicity',
+                             color=self.colors[0])
+        index = 1
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('total_recoil_hits - %s' % name, 
+                                 self.ntuple['total_recoil_hits'][cut], 
+                                 150, 0, 150,
+                                 'Recoil Hit Multiplicity', 
+                                 color=self.colors[index])
+            index += 1
+
+        for layer_n in xrange(0, 10): 
+            plt.plot_hists([
+                self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)],
+                self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)][single_track],
+                self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)][hcal_veto],
+                self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)][ecal_veto],
+                self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)][basic_veto]
+                ],
+                np.linspace(0, 150, 151),
+                labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
+                ylog=True,
+                x_label='Recoil Hit Layer %s Multiplicity' % (layer_n + 1))
+
+            plt.plot_hists([
+                self.ntuple['total_charge_l%s' % (layer_n + 1)],
+                self.ntuple['total_charge_l%s' % (layer_n + 1)][single_track],
+                self.ntuple['total_charge_l%s' % (layer_n + 1)][hcal_veto],
+                self.ntuple['total_charge_l%s' % (layer_n + 1)][ecal_veto],
+                self.ntuple['total_charge_l%s' % (layer_n + 1)][basic_veto]
+                ],
+                np.linspace(0, 50, 151),
+                labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
+                ylog=True,
+                x_label='Total Charge Layer %s' % (layer_n + 1))
+
+            plt.create_root_hist('total_recoil_hits_l%s' % (layer_n + 1), 
+                                 self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)],
+                                 150, 0, 150,
+                                 'Recoil Hit Layer %s Multiplicity' % (layer_n + 1), 
+                                 color=self.colors[0])
+            plt.create_root_hist('total_charge_l%s' % (layer_n + 1), 
+                                 self.ntuple['total_charge_l%s' % (layer_n + 1)],
+                                 150, 0, 50,
+                                 'Total Charge Layer %s' % (layer_n + 1),
+                                 color=self.colors[0])
+            index = 0
+            for name, cut in cuts.iteritems():
+                plt.create_root_hist('total_recoil_hits_l%s - %s' % ((layer_n + 1), name),
+                                     self.ntuple['total_recoil_hits_l%s' % (layer_n + 1)][cut],
+                                     150, 0, 150,
+                                     'Recoil Hit Layer %s Multiplicity' % (layer_n + 1), 
+                                     color=self.colors[index])
+                plt.create_root_hist('total_charge_l%s - %s' % ((layer_n + 1), name),
+                                     self.ntuple['total_charge_l%s' % (layer_n + 1)][cut],
+                                     150, 0, 50,
+                                     'Total Charge Layer %s' % (layer_n + 1),
+                                     color=self.colors[index])
+                index += 1
 
         plt.close()
        
