@@ -169,9 +169,16 @@ class Plotter(object):
         self.pdf.savefig(bbox_inches='tight')
         plt.close()
 
-    def create_root_hist(self, name, values, bins, x_min, x_max, x_label):
+    def create_root_hist(self, name, values, bins, x_min, x_max, x_label, **params):
+        
+        color = 1
+        if 'color' in params: 
+            color=params['color']
+
         histo = r.TH1F(name, name, bins, x_min, x_max)
         histo.GetXaxis().SetTitle(x_label)
+        histo.SetLineColor(color)
+        histo.SetLineWidth(2)
         rnp.fill_hist(histo, values)
         histo.Write()
 
