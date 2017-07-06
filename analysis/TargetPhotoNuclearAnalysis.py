@@ -849,7 +849,7 @@ class TargetPhotoNuclearAnalysis(object) :
         index = 1
         for name, cut in cuts.iteritems():
             plt.create_root_hist('max_w_theta_cut - %s' % name, 
-                                 self.ntuple['max_w_theta'][(self.ntuple['max_w_theta'] > 100) & cut], 
+                                 self.ntuple['max_w'][(self.ntuple['max_w_theta'] > 100) & cut], 
                                  360, 0, 180,
                                 'Max W(#theta > 100) (MeV)', 
                                  color=self.colors[index])
