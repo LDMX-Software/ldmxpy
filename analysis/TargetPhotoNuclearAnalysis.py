@@ -37,7 +37,14 @@ class TargetPhotoNuclearAnalysis(object) :
     def created_within_target(self, particle) :
         if abs(particle.getVertex()[2]) <= 0.550 : return True 
         return False
-    
+  
+    def calculate_w(self, particle): 
+        pvec = particle.getMomentum()
+        p = la.norm(pvec)
+        ke = particle.getEnergy() - particle.getMass()
+        theta = math.acos(pvec[2]/p)*180.0/3.14159 
+        return 0.5*(p + ke)*(1.12 - 0.5*(pvec[2]/p)), theta
+
     def initialize(self) :
 
         self.ntuple = {}
@@ -48,7 +55,8 @@ class TargetPhotoNuclearAnalysis(object) :
                 'ecal_hit_energy', 'total_ecal_energy', 'passes_ecal_veto',
                 'hcal_hit_energy', 'total_hcal_energy', 'total_hcal_pe',
                 'passes_hcal_veto', 'up_tp_energy', 'down_tp_energy',
-                'lead_hadron_ke', 'lead_hadron_theta', 'lead_hadron_p', 
+                'lead_hadron_ke', 'lead_hadron_theta', 
+                'lead_hadron_p', 'lead_hadron_pdgid', 'max_w', 'max_w_theta', 
                 'lead_pion_ke', 'lead_pion_theta', 'lead_pion_p', 
                 'lead_neutron_ke', 'lead_neutron_theta', 'lead_neutron_p', 
                 'lead_proton_ke', 'lead_proton_theta', 'lead_proton_p',
@@ -122,6 +130,8 @@ class TargetPhotoNuclearAnalysis(object) :
         lead_neutron = None
         lead_pion_ke = -9999
         lead_pion = None
+        max_w = -9999
+        max_w_theta = -9999
         for pn_daughter_count in xrange(0, pn_gamma.getDaughterCount()): 
             pn_daughter = pn_gamma.getDaughter(pn_daughter_count)
             
@@ -139,12 +149,21 @@ class TargetPhotoNuclearAnalysis(object) :
             elif ((abs(pn_daughter.getPdgID()) == 211) & (lead_neutron_ke < ke)):
                 lead_pion_ke = ke
                 lead_pion = pn_daughter
+
+            wp, theta = self.calculate_w(pn_daughter)
+            if wp > max_w: 
+                max_w = wp
+                max_w_theta = theta
         
         self.ntuple['lead_hadron_ke'].append(lead_ke)
         self.ntuple['lead_proton_ke'].append(lead_proton_ke)
         self.ntuple['lead_neutron_ke'].append(lead_neutron_ke)
         self.ntuple['lead_pion_ke'].append(lead_pion_ke)
+        
+        self.ntuple['max_w'].append(max_w)
+        self.ntuple['max_w_theta'].append(max_w_theta)
 
+        pdgid = -9999
         if lead_hadron == None: 
             theta = -9999
             p = -9999
@@ -152,9 +171,11 @@ class TargetPhotoNuclearAnalysis(object) :
             pvec = lead_hadron.getMomentum()
             p = la.norm(pvec)
             theta = math.acos(pvec[2]/p)*180.0/3.14159 
+            pdgid = lead_hadron.getPdgID()
 
         self.ntuple['lead_hadron_theta'].append(theta)
         self.ntuple['lead_hadron_p'].append(p)
+        self.ntuple['lead_hadron_pdgid'].append(pdgid)
         
         if lead_proton == None: 
             theta = -9999
@@ -485,6 +506,32 @@ class TargetPhotoNuclearAnalysis(object) :
             index += 1
 
         plt.plot_hists([
+                        self.ntuple['lead_hadron_pdgid'],
+                        self.ntuple['lead_hadron_pdgid'][single_track],
+                        self.ntuple['lead_hadron_pdgid'][hcal_veto],
+                        self.ntuple['lead_hadron_pdgid'][ecal_veto],
+                        self.ntuple['lead_hadron_pdgid'][basic_veto]
+                       ],
+                      np.linspace(0, 4000, 161),
+                      labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
+                      ylog=True,
+                      x_label='Leading Hadron Momentum (MeV)')
+
+        plt.create_root_hist('lead_hadron_pdgid', 
+                             self.ntuple['lead_hadron_pdgid'], 
+                             160, 0, 4000,
+                             'Leading Hadron Momentum (MeV)',
+                             color=self.colors[0])
+        index = 1
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('lead_hadron_pdgid - %s' % name, 
+                                 self.ntuple['lead_hadron_pdgid'][cut], 
+                                 160, 0, 4000,
+                                 'Leading Hadron Momentum (MeV)',
+                                 color=self.colors[index])
+            index += 1
+
+        plt.plot_hists([
                         self.ntuple['lead_proton_ke'],
                         self.ntuple['lead_proton_ke'][single_track],
                         self.ntuple['lead_proton_ke'][hcal_veto],
@@ -740,6 +787,65 @@ class TargetPhotoNuclearAnalysis(object) :
                                  'Leading #pi Momentum (MeV)',
                                  color=self.colors[index])
             index += 1
+
+        plt.plot_hists([
+                        self.ntuple['max_w'],
+                        self.ntuple['max_w'][single_track],
+                        self.ntuple['max_w'][hcal_veto],
+                        self.ntuple['max_w'][ecal_veto],
+                        self.ntuple['max_w'][basic_veto]
+                       ],
+                      np.linspace(0, 5000, 251),
+                      labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
+                      ylog=True,
+                      x_label='Max W (MeV)')
+
+        plt.create_root_hist('max_w', 
+                             self.ntuple['max_w'], 
+                             250, 0, 5000,
+                             'Max W (MeV)', 
+                             color=self.colors[0])
+        
+        plt.plot_hists([
+                        self.ntuple['max_w_theta'],
+                        self.ntuple['max_w_theta'][single_track],
+                        self.ntuple['max_w_theta'][hcal_veto],
+                        self.ntuple['max_w_theta'][ecal_veto],
+                        self.ntuple['max_w_theta'][basic_veto]
+                       ],
+                      np.linspace(0, 180, 361),
+                      labels=['All', 'Single track', 'Hcal veto', 'Ecal veto', 'Basic veto'], 
+                      ylog=True,
+                      x_label='Max W (MeV)')
+
+        plt.create_root_hist('max_w_theta', 
+                             self.ntuple['max_w_theta'], 
+                             360, 0, 180,
+                             'Max W (MeV)', 
+                             color=self.colors[0])
+        index = 1
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('max_w_theta - %s' % name, 
+                                 self.ntuple['max_w_theta'][cut], 
+                                 360, 0, 180,
+                                 'Max W (MeV)',
+                                 color=self.colors[index])
+            index += 1
+
+
+        plt.plot_hists([
+                        self.ntuple['max_w'][self.ntuple['max_w_theta'] > 100]
+                       ],
+                      np.linspace(0, 5000, 251),
+                      labels=['All'],
+                      ylog=True,
+                      x_label='Max W (MeV)')
+
+        plt.create_root_hist('max_w_theta_cut', 
+                             self.ntuple['max_w'][self.ntuple['max_w_theta'] > 100], 
+                             250, 0, 5000,
+                             'Max W (MeV)', 
+                             color=self.colors[0])
 
         plt.plot_hists([
                         self.ntuple['track_count'],
