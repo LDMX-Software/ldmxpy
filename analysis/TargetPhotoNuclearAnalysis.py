@@ -839,13 +839,20 @@ class TargetPhotoNuclearAnalysis(object) :
                       np.linspace(0, 5000, 251),
                       labels=['All'],
                       ylog=True,
-                      x_label='Max W (MeV)')
+                      x_label='Max W($\theta >$ 100) (MeV)')
 
         plt.create_root_hist('max_w_theta_cut', 
                              self.ntuple['max_w'][self.ntuple['max_w_theta'] > 100], 
                              250, 0, 5000,
-                             'Max W (MeV)', 
+                             'Max W(#theta > 100) (MeV)', 
                              color=self.colors[0])
+        index = 1
+        for name, cut in cuts.iteritems():
+            plt.create_root_hist('max_w_theta_cut - %s' % name, 
+                                 self.ntuple['max_w_theta'][(self.ntuple['max_w_theta'] > 100) & cut], 
+                                 360, 0, 180,
+                                'Max W(#theta > 100) (MeV)', 
+                                 color=self.colors[index])
 
         plt.plot_hists([
                         self.ntuple['track_count'],
