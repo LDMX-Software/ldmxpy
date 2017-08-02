@@ -18,6 +18,7 @@ class Plotter(object):
         matplotlib.rcParams.update({'font.size': 20})
         matplotlib.rcParams['axes.facecolor'] = 'white'
         matplotlib.rcParams['legend.numpoints'] = 1
+        matplotlib.rcParams['legend.fontsize'] = 12
         
         self.pdf = PdfPages(file_path + '.pdf')
         print '[ Plotter ] Saving plots to %s' % (file_path + '.pdf')
@@ -84,6 +85,10 @@ class Plotter(object):
         if 'ylog' in params:
             if norm: ax.set_yscale('log')
             else: ax.set_yscale('symlog')
+        
+        if 'xlog' in params:
+            if norm: ax.set_xscale('log')
+            else: ax.set_xscale('symlog')
 
         if 'x_label' in params:
             ax.set_xlabel(params['x_label'])
@@ -93,13 +98,21 @@ class Plotter(object):
             labels = params['labels']
 
         label_loc=0
+        box = None
         if 'label_loc' in params: 
-            label_loc=params['label_loc']
+            if params['label_loc'] == 10: 
+                box = ax.get_position()
+                ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            else:
+                label_loc=params['label_loc']
 
         for x_arr, label in izip(values, labels):
             ax.hist(x_arr, bins, histtype='step', lw=1.5, normed=norm, label=label)
 
-        if labels: ax.legend(loc=label_loc)
+        if box:
+            ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        else: 
+            ax.legend(loc=label_loc)
 
         self.pdf.savefig(bbox_inches='tight')
         plt.close()
@@ -180,6 +193,12 @@ class Plotter(object):
         histo.SetLineColor(color)
         histo.SetLineWidth(2)
         rnp.fill_hist(histo, values)
+        histo.Write()
+
+    def create_root_hist2d(self, name, x_vals, y_vals, bins_x, x_min, x_max, bins_y, y_min, y_max, **params): 
+
+        histo = r.TH2F(name, name, bins_x, x_min, x_max, bins_y, y_min, y_max)
+        rnp.fill_hist(histo, np.column_stack((x_vals, y_vals)))
         histo.Write()
 
     def close(self):
