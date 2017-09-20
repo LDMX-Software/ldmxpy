@@ -8,7 +8,7 @@ import root_numpy as rnp
 from itertools import izip
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import LogNorm
-
+from rootpy.plotting import Hist
 
 class Plotter(object):
 
@@ -188,10 +188,13 @@ class Plotter(object):
         if 'color' in params: 
             color=params['color']
 
-        histo = r.TH1F(name, name, bins, x_min, x_max)
+        #histo = r.TH1F(name, name, bins, x_min, x_max)
+        histo = Hist(bins, x_min, x_max, name=name, title=name, type='F')
         histo.GetXaxis().SetTitle(x_label)
-        histo.SetLineColor(color)
-        histo.SetLineWidth(2)
+        #histo.SetLineColor(color)
+        #histo.linecolor = color
+        #histo.linewidth = 2
+        #histo.markercolor = color
         rnp.fill_hist(histo, values)
         histo.Write()
 

@@ -41,9 +41,20 @@ class PnReWeightingAnalysis:
         for variable in self.variables: 
             self.ntuple[variable] = []
         
-        self.colors = [r.kAzure + 2, r.kRed + 2, r.kGreen + 2, r.kViolet + 6, r.kOrange + 7]
+        self.colors = ['#348ABD', '#A60628', '#7A68A6', '#467821', '#D55E00',
+                       '#CC79A7', '#56B4E9', '#009E73', '#F0E442', '#0072B2']
+        
+        self.event_count = 0
+        self.file_prefix = None
        
     def process(self, event):
+
+        self.event_count += 1
+
+        if self.event_count == 1: 
+            self.file_prefix = event.get_file_name()[
+                    event.get_file_name().rfind('/') + 1:-5]
+            print self.file_prefix
 
         sim_particles = event.get_collection('SimParticles_sim')
 
@@ -322,7 +333,7 @@ class PnReWeightingAnalysis:
 
         print 'Total: %s' % len(self.ntuple['hnucleon_ke'])
 
-        plt = Plotter.Plotter('photonuclear_analysis')
+        plt = Plotter.Plotter(self.file_prefix + '_plots')
 
         plt.plot_hist(self.ntuple['pn_mult'], 
                       np.linspace(0, 200, 201),
