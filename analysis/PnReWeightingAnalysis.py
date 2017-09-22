@@ -274,7 +274,28 @@ class PnReWeightingAnalysis:
                                  500, 0, 5000,
                                  'Kinetic Energy, Inclusive (mev)', 
                                  color=self.colors[0])
-       
+
+        theta_cut = 70
+        while theta_cut != 180:
+            plt.plot_hists([
+                self.ntuple['nucleon_ke'][self.ntuple['nucleon_theta'] > theta_cut], 
+                self.ntuple['proton_ke'][self.ntuple['proton_theta'] > theta_cut], 
+                self.ntuple['neutron_ke'][self.ntuple['neutron_theta'] > theta_cut]],
+                np.linspace(0, 5000, 501), 
+                labels=['Nucleons, $\theta > %s$' % theta_cut,
+                        'Protons $\theta > %s$' % theta_cut,
+                        'Neutrons $\theta > %s$' % theta_cut], 
+                ylog=True, 
+                x_label='Kinetic Energy, Inclusive, $\theta > %s$ (MeV)' % theta_cut)
+
+            for sparticle in ['nucleon', 'proton', 'neutron']:
+                plt.create_root_hist('%s_ke_theta_cut_%s' % (sparticle, theta_cut),  
+                                     self.ntuple['%s_ke' % sparticle][self.ntuple['%s_theta' % sparticle] > theta_cut], 
+                                     500, 0, 5000,
+                                     'Kinetic Energy, Inclusive, #theta > %s (MeV)' % theta_cut, 
+                                     color=self.colors[0])
+            theta_cut += 10
+
         plt.plot_hists([
             self.ntuple['hnucleon_ke'], 
             self.ntuple['hproton_ke'], 
@@ -335,6 +356,27 @@ class PnReWeightingAnalysis:
                                  500, 0, 5000,
                                  'W, inclusive (MeV)', 
                                  color=self.colors[0])
+
+        theta_cut = 70
+        while theta_cut != 180:
+            plt.plot_hists([
+                self.ntuple['nucleon_w'][self.ntuple['nucleon_theta'] > theta_cut], 
+                self.ntuple['proton_w'][self.ntuple['proton_theta'] > theta_cut], 
+                self.ntuple['neutron_w'][self.ntuple['neutron_theta'] > theta_cut]],
+                np.linspace(0, 5000, 501), 
+                labels=['Nucleons, $\theta > %s$' % theta_cut,
+                        'Protons $\theta > %s$' % theta_cut,
+                        'Neutrons $\theta > %s$' % theta_cut], 
+                ylog=True, 
+                x_label='W, Inclusive, $\theta > %s$ (MeV)' % theta_cut)
+
+            for sparticle in ['nucleon', 'proton', 'neutron']:
+                plt.create_root_hist('%s_w_theta_cut_%s' % (sparticle, theta_cut),  
+                                     self.ntuple['%s_w' % sparticle][self.ntuple['%s_theta' % sparticle] > theta_cut], 
+                                     500, 0, 5000,
+                                     'W, Inclusive, #theta > %s (MeV)' % theta_cut, 
+                                     color=self.colors[0])
+            theta_cut += 10
 
         plt.plot_hists([
             self.ntuple['hnucleon_w'], 
