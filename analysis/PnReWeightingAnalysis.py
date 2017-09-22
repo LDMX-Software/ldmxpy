@@ -18,43 +18,62 @@ class PnReWeightingAnalysis:
         self.variables = [
             'events', 
             'pn_mult',
+            'nucleon_ke', 'nucleon_theta', 'nucleon_w',
             'hnucleon_ke', 'hnucleon_theta', 'hnucleon_w',
+            'proton_ke', 'proton_theta', 'proton_w',
             'hproton_ke', 'hproton_theta', 'hproton_w',
+            'neutron_ke', 'neutron_theta', 'neutron_w',
             'hneutron_ke', 'hneutron_theta', 'hneutron_w',
             'hw_nucleons', 'hw_nucleons_all', 'hw_nucleons_sum', 
             'hw_nucleons_theta', 'hw_nucleons_ke', 
-            'hnucleon_ke_theta_30_50',
-            'hnucleon_ke_theta_50_70',
-            'hnucleon_ke_theta_70_90',
-            'hnucleon_ke_theta_90_110',
-            'hnucleon_ke_theta_110_130',
-            'hnucleon_ke_theta_130_150',
-            'hnucleon_ke_theta_150',
-            'hnucleon_w_theta_30_50',
-            'hnucleon_w_theta_50_70',
-            'hnucleon_w_theta_70_90',
-            'hnucleon_w_theta_90_110',
-            'hnucleon_w_theta_110_130',
-            'hnucleon_w_theta_130_150',
-            'hnucleon_w_theta_150',
-            'hw_nucleon_theta_30_50',
-            'hw_nucleon_theta_50_70',
-            'hw_nucleon_theta_70_90',
-            'hw_nucleon_theta_90_110',
-            'hw_nucleon_theta_110_130',
-            'hw_nucleon_theta_130_150',
-            'hw_nucleon_theta_150',
         ]
+
+        self.delta_variables = []
+        delta = .1
+        for idelta in xrange(25):
+            self.delta_variables.extend(
+                    ['nucleon_ke_delta_%s' % delta, 
+                     'nucleon_theta_delta_%s' % delta, 
+                     'nucleon_w_delta_%s' % delta])
+            delta += .1
+
+        self.theta_variables = { 
+            'chnucleon_ke_theta':{}, 'chproton_ke_theta':{}, 'chneutron_ke_theta':{},  
+            'chnucleon_w_theta':{}, 'chproton_w_theta':{}, 'chneutron_w_theta':{},  
+            'chw_nucleon_theta':{}, 'chw_proton_theta':{}, 'chw_neutron_theta':{}
+        }
+
+        theta = 20
+        for itheta in xrange(0, 8):
+            for ptype in ['nucleon', 'proton', 'neutron']:
+                self.variables.append('%s_ke_theta_%s_%s' % (ptype, theta, theta + 20))
+                self.variables.append('%s_w_theta_%s_%s' % (ptype, theta, theta + 20))
+                self.variables.append('h%s_ke_theta_%s_%s' % (ptype, theta, theta + 20))
+                self.variables.append('h%s_w_theta_%s_%s' % (ptype, theta, theta + 20))
+                self.variables.append('hw_%s_theta_%s_%s' % (ptype, theta, theta + 20))
+
+            for key in self.theta_variables: 
+                self.theta_variables[key]['theta_%s_%s' % (theta, theta + 20)] = -9999
+
+            theta += 20
 
         for variable in self.variables: 
             self.ntuple[variable] = []
         
-        self.colors = ['#348ABD', '#A60628', '#7A68A6', '#467821', '#D55E00',
-                       '#CC79A7', '#56B4E9', '#009E73', '#F0E442', '#0072B2']
+        for variable in self.delta_variables: 
+            self.ntuple[variable] = []
+
+        self.colors = [r.kAzure + 2, r.kGreen - 2, r.kRed + 2, r.kOrange + 8,
+                       r.kMagenta - 4, r.kAzure + 10, r.kYellow, r.kBlack, r.kRed]
         
         self.event_count = 0
         self.file_prefix = None
-       
+
+    def reset_variables(self): 
+        for var_key in self.theta_variables:
+            for key in self.theta_variables[var_key]:
+                self.theta_variables[var_key][key] = -9999
+
     def process(self, event):
 
         self.event_count += 1
@@ -85,10 +104,14 @@ class PnReWeightingAnalysis:
                 break
 
         if not pn_gamma: sys.exit('[ PnReWeightingAnalysis ]: Failed to find PN gamma.')
+        
+
 
         #print '[ PnReWeightAnalysis ]: Photo-nuclear multiplicity: %s' % pn_gamma.getDaughterCount()
         self.ntuple['pn_mult'].append(pn_gamma.getDaughterCount())
        
+        self.reset_variables()        
+
         hnucleon_ke = -9999
         hnucleon_theta = -9999
         hw = -9999
@@ -104,48 +127,41 @@ class PnReWeightingAnalysis:
         hw_neutron = -9999
         hneutron = None
 
-        theta = 30
-        hnucleon_ke_theta = {}
-        hnucleon_particle_theta = {}
-        hw_nucleon_theta = {}
-        hproton_ke_theta = {}
-        hw_proton_theta = {}
-        hneutron_ke_theta = {}
-        hw_neutron_theta = {}
-        for itheta in xrange(0, 6): 
-            hnucleon_ke_theta['theta_%s_%s'% (theta, theta + 20)] = -9999 
-            hnucleon_particle_theta['theta_%s_%s'% (theta, theta + 20)] = None 
-            hw_nucleon_theta['theta_%s_%s'% (theta, theta + 20)] = -9999  
-            hproton_ke_theta['theta_%s_%s'% (theta, theta + 20)] = -9999  
-            hw_proton_theta['theta_%s_%s'% (theta, theta + 20)] = -9999  
-            hneutron_ke_theta['theta_%s_%s'% (theta, theta + 20)] = -9999  
-            hw_neutron_theta['theta_%s_%s'% (theta, theta + 20)] = -9999  
-            theta = theta + 20
-
-        hnucleon_ke_theta['theta_150'] = -9999 
-        hnucleon_particle_theta['theta_150'] = None
-        hw_nucleon_theta['theta_150'] = -9999
-        hproton_ke_theta['theta_150'] = -9999
-        hw_proton_theta['theta_150'] = -9999
-        hneutron_ke_theta['theta_150'] = -9999
-        hw_neutron_theta['theta_150'] = -9999
-
         for idaughter in xrange(pn_gamma.getDaughterCount()): 
+            
             daughter = pn_gamma.getDaughter(idaughter)
             ke = daughter.getEnergy() - daughter.getMass()
             pvec = daughter.getMomentum()
             p = la.norm(pvec)
             theta = math.acos(pvec[2]/p)*180/3.14159
             pdg_id = abs(daughter.getPdgID())
-            w = self.calculate_w(daughter)
+            w = self.calculate_w(daughter, 0.5)
         
             if ((pdg_id == 2212) or (pdg_id == 2112)): 
+                
+                self.ntuple['nucleon_ke'].append(ke)
+                self.ntuple['nucleon_theta'].append(theta)
+                self.ntuple['nucleon_w'].append(w)
+              
+                
+                delta = .1
+                for idelta in xrange(25):
+                    self.ntuple['nucleon_w_delta_%s' % delta].append(
+                        self.calculate_w(daughter, delta))
+
+                    delta += .1
+
                 if ke > hnucleon_ke: 
                     hnucleon_ke = ke
                     hnucleon = daughter
                     hnucleon_theta = theta
                 
                 if pdg_id ==2212: 
+                
+                    self.ntuple['proton_ke'].append(ke)
+                    self.ntuple['proton_theta'].append(theta)
+                    self.ntuple['proton_w'].append(w)
+                    
                     if ke > hproton_ke:
                         hproton_ke = ke
                         hproton = daughter
@@ -155,6 +171,11 @@ class PnReWeightingAnalysis:
                         hw_proton = w
 
                 if pdg_id ==2112: 
+                    
+                    self.ntuple['neutron_ke'].append(ke)
+                    self.ntuple['neutron_theta'].append(theta)
+                    self.ntuple['neutron_w'].append(w)
+                    
                     if ke > hneutron_ke:
                         hneutron_ke = ke
                         hneutron = daughter
@@ -166,174 +187,35 @@ class PnReWeightingAnalysis:
                 if w > hw: 
                     hw = w
 
-                if (theta >= 30) & (theta < 50):
-
-                    if ke > hnucleon_ke_theta['theta_30_50']: 
-                        hnucleon_ke_theta['theta_30_50'] = ke
-                        hnucleon_particle_theta['theta_30_50'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_30_50']:
-                        hw_nucleon_theta['theta_30_50'] = w
-
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_30_50']:
-                            hproton_ke_theta['theta_30_50'] = ke
-
-                        if w > hw_proton_theta['theta_30_50']:
-                            hw_proton_theta['theta_30_50'] = w
-
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_30_50']:
-                            hneutron_ke_theta['theta_30_50'] = ke
-
-                        if w > hw_neutron_theta['theta_30_50']:
-                            hw_neutron_theta['theta_30_50'] = w
-
-                elif (theta >= 50) & (theta < 70):
-                    
-                    if ke > hnucleon_ke_theta['theta_50_70']: 
-                        hnucleon_ke_theta['theta_50_70'] = ke
-                        hnucleon_particle_theta['theta_50_70'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_50_70']:
-                        hw_nucleon_theta['theta_50_70'] = w
-                    
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_50_70']:
-                            hproton_ke_theta['theta_50_70'] = ke
-
-                        if w > hw_proton_theta['theta_50_70']:
-                            hw_proton_theta['theta_50_70'] = w
-
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_50_70']:
-                            hneutron_ke_theta['theta_50_70'] = ke
-                        
-                        if w > hw_neutron_theta['theta_50_70']:
-                            hw_neutron_theta['theta_50_70'] = w
-                elif (theta >= 70) & (theta < 90):
-                    
-                    if ke > hnucleon_ke_theta['theta_70_90']: 
-                        hnucleon_ke_theta['theta_70_90'] = ke
-                        hnucleon_particle_theta['theta_70_90'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_70_90']:
-                        hw_nucleon_theta['theta_70_90'] = w
-                    
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_70_90']:
-                            hproton_ke_theta['theta_70_90'] = ke
-
-                        if w > hw_proton_theta['theta_70_90']:
-                            hw_proton_theta['theta_70_90'] = w
-                    
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_70_90']:
-                            hneutron_ke_theta['theta_70_90'] = ke
-                        
-                        if w > hw_neutron_theta['theta_70_90']:
-                            hw_neutron_theta['theta_70_90'] = w
-                elif (theta >= 90) & (theta < 110):
-                    
-                    if ke > hnucleon_ke_theta['theta_90_110']: 
-                        hnucleon_ke_theta['theta_90_110'] = ke
-                        hnucleon_particle_theta['theta_90_110'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_90_110']:
-                        hw_nucleon_theta['theta_90_110'] = w
-                    
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_90_110']:
-                            hproton_ke_theta['theta_90_110'] = ke
-                        
-                        if w > hw_proton_theta['theta_90_110']:
-                            hw_proton_theta['theta_90_110'] = w
-
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_90_110']:
-                            hneutron_ke_theta['theta_90_110'] = ke
-                        
-                        if w > hw_neutron_theta['theta_90_110']:
-                            hw_neutron_theta['theta_90_110'] = w
-                elif (theta >= 110) & (theta < 130):
-                    
-                    if ke > hnucleon_ke_theta['theta_110_130']: 
-                        hnucleon_ke_theta['theta_110_130'] = ke
-                        hnucleon_particle_theta['theta_110_130'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_110_130']:
-                        hw_nucleon_theta['theta_110_130'] = w
-                    
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_110_130']:
-                            hproton_ke_theta['theta_110_130'] = ke
-
-                        if w > hw_proton_theta['theta_110_130']:
-                            hw_proton_theta['theta_110_130'] = w
-
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_110_130']:
-                            hneutron_ke_theta['theta_110_130'] = ke
-                        
-                        if w > hw_neutron_theta['theta_110_130']:
-                            hw_neutron_theta['theta_110_130'] = w
-                elif (theta >= 130) & (theta < 150):
-                    
-                    if ke > hnucleon_ke_theta['theta_130_150']: 
-                        hnucleon_ke_theta['theta_130_150'] = ke
-                        hnucleon_particle_theta['theta_130_150'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_130_150']:
-                        hw_nucleon_theta['theta_130_150'] = w
-                    
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_130_150']:
-                            hproton_ke_theta['theta_130_150'] = ke
-
-                        if w > hw_proton_theta['theta_130_150']:
-                            hw_proton_theta['theta_130_150'] = w
-
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_130_150']:
-                            hneutron_ke_theta['theta_130_150'] = ke
-                        
-                        if w > hw_neutron_theta['theta_130_150']:
-                            hw_neutron_theta['theta_130_150'] = w
-                elif (theta >= 150):
-                    
-                    if ke > hnucleon_ke_theta['theta_150']: 
-                        hnucleon_ke_theta['theta_150'] = ke
-                        hnucleon_particle_theta['theta_150'] =  daughter
-                    
-                    if w > hw_nucleon_theta['theta_150']:
-                        hw_nucleon_theta['theta_150'] = w
-
-                    if pdg_id == 2212: 
-                        if ke > hproton_ke_theta['theta_150']:
-                            hproton_ke_theta['theta_150'] = ke
-
-                        if w > hw_proton_theta['theta_150']:
-                            hw_proton_theta['theta_150'] = w
-
-                    if pdg_id == 2112: 
-                        if ke > hneutron_ke_theta['theta_150']:
-                            hneutron_ke_theta['theta_150'] = ke
-                        
-                        if w > hw_neutron_theta['theta_150']:
-                            hw_neutron_theta['theta_150'] = w
-
-
+               
+                if (theta >= 20) & (theta < 40):
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 20, 40)
+                elif (theta >= 40) & (theta < 60):
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 40, 60)
+                elif (theta >= 60) & (theta < 80): 
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 60, 80)
+                elif (theta >= 80) & (theta < 100): 
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 80, 100)
+                elif (theta >= 100) & (theta < 120): 
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 100, 120)
+                elif (theta >= 120) & (theta < 140): 
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 120, 140)
+                elif (theta >= 140) & (theta < 160): 
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 140, 160)
+                elif (theta >= 160) & (theta < 180): 
+                    self.fill_angular_plots(pdg_id, ke, w, theta, 160, 180)
+        
         self.ntuple['hnucleon_ke'].append(hnucleon_ke)
         self.ntuple['hnucleon_theta'].append(hnucleon_theta)
-        if hnucleon: self.ntuple['hnucleon_w'].append(self.calculate_w(hnucleon))
+        if hnucleon: self.ntuple['hnucleon_w'].append(self.calculate_w(hnucleon, 0.5))
         else: self.ntuple['hnucleon_w'].append(-9999)
         self.ntuple['hproton_ke'].append(hproton_ke)
         self.ntuple['hproton_theta'].append(hproton_theta)
-        if hproton: self.ntuple['hproton_w'].append(self.calculate_w(hproton))
+        if hproton: self.ntuple['hproton_w'].append(self.calculate_w(hproton, 0.5))
         else: self.ntuple['hproton_w'].append(-9999)
         self.ntuple['hneutron_ke'].append(hneutron_ke)
         self.ntuple['hneutron_theta'].append(hneutron_theta)
-        if hneutron: self.ntuple['hneutron_w'].append(self.calculate_w(hneutron))
+        if hneutron: self.ntuple['hneutron_w'].append(self.calculate_w(hneutron, 0.5))
         else: self.ntuple['hneutron_w'].append(-9999)
 
         self.ntuple['hw_nucleons'].append(hw)
@@ -343,39 +225,17 @@ class PnReWeightingAnalysis:
         if hw_neutron == -9999: hw_neutron = 0
         self.ntuple['hw_nucleons_sum'].append(hw_proton + hw_neutron)
 
-        self.ntuple['hnucleon_ke_theta_30_50'].append(hnucleon_ke_theta['theta_30_50'])
-        self.ntuple['hnucleon_ke_theta_50_70'].append(hnucleon_ke_theta['theta_50_70'])
-        self.ntuple['hnucleon_ke_theta_70_90'].append(hnucleon_ke_theta['theta_70_90'])
-        self.ntuple['hnucleon_ke_theta_90_110'].append(hnucleon_ke_theta['theta_90_110'])
-        self.ntuple['hnucleon_ke_theta_110_130'].append(hnucleon_ke_theta['theta_110_130'])
-        self.ntuple['hnucleon_ke_theta_130_150'].append(hnucleon_ke_theta['theta_130_150'])
-        self.ntuple['hnucleon_ke_theta_150'].append(hnucleon_ke_theta['theta_150'])
+        theta = 20
+        for itheta in xrange(0, 8): 
+            for ptype in ['nucleon', 'proton', 'neutron']:
+                self.ntuple['h%s_ke_theta_%s_%s' % (ptype, theta, theta + 20)].append(
+                        self.theta_variables['ch%s_ke_theta' % ptype]['theta_%s_%s' % (theta, theta + 20)])
+                self.ntuple['h%s_w_theta_%s_%s' % (ptype, theta, theta + 20)].append(
+                        self.theta_variables['ch%s_w_theta' % ptype]['theta_%s_%s' % (theta, theta + 20)])
+                self.ntuple['hw_%s_theta_%s_%s' % (ptype, theta, theta + 20)].append(
+                        self.theta_variables['chw_%s_theta' % ptype]['theta_%s_%s' % (theta, theta + 20)])
 
-        if hnucleon_particle_theta['theta_30_50']: self.ntuple['hnucleon_w_theta_30_50'].append(self.calculate_w(hnucleon_particle_theta['theta_30_50']))
-        else: self.ntuple['hnucleon_w_theta_30_50'].append(-9999)
-        if hnucleon_particle_theta['theta_50_70']: self.ntuple['hnucleon_w_theta_50_70'].append(self.calculate_w(hnucleon_particle_theta['theta_50_70']))
-        else: self.ntuple['hnucleon_w_theta_50_70'].append(-9999)
-        if hnucleon_particle_theta['theta_70_90']: self.ntuple['hnucleon_w_theta_70_90'].append(self.calculate_w(hnucleon_particle_theta['theta_70_90']))
-        else: self.ntuple['hnucleon_w_theta_70_90'].append(-9999)
-        if hnucleon_particle_theta['theta_90_110']: self.ntuple['hnucleon_w_theta_90_110'].append(self.calculate_w(hnucleon_particle_theta['theta_90_110']))
-        else: self.ntuple['hnucleon_w_theta_90_110'].append(-9999)
-        if hnucleon_particle_theta['theta_110_130']: 
-            self.ntuple['hnucleon_w_theta_110_130'].append(self.calculate_w(hnucleon_particle_theta['theta_110_130']))
-        else: self.ntuple['hnucleon_w_theta_110_130'].append(-9999)
-        if hnucleon_particle_theta['theta_130_150']: 
-            self.ntuple['hnucleon_w_theta_130_150'].append(self.calculate_w(hnucleon_particle_theta['theta_130_150']))
-        else: self.ntuple['hnucleon_w_theta_130_150'].append(-9999)
-        if hnucleon_particle_theta['theta_150']: 
-            self.ntuple['hnucleon_w_theta_150'].append(self.calculate_w(hnucleon_particle_theta['theta_150']))
-        else: self.ntuple['hnucleon_w_theta_150'].append(-9999)
-
-        self.ntuple['hw_nucleon_theta_30_50'].append(hw_nucleon_theta['theta_30_50'])
-        self.ntuple['hw_nucleon_theta_50_70'].append(hw_nucleon_theta['theta_50_70'])
-        self.ntuple['hw_nucleon_theta_70_90'].append(hw_nucleon_theta['theta_70_90'])
-        self.ntuple['hw_nucleon_theta_90_110'].append(hw_nucleon_theta['theta_90_110'])
-        self.ntuple['hw_nucleon_theta_110_130'].append(hw_nucleon_theta['theta_110_130'])
-        self.ntuple['hw_nucleon_theta_130_150'].append(hw_nucleon_theta['theta_130_150'])
-        self.ntuple['hw_nucleon_theta_150'].append(hw_nucleon_theta['theta_150'])
+            theta += 20
 
     def finalize(self):
 
@@ -400,31 +260,36 @@ class PnReWeightingAnalysis:
                              color=self.colors[0])
         
         plt.plot_hists([
+            self.ntuple['nucleon_ke'], 
+            self.ntuple['proton_ke'], 
+            self.ntuple['neutron_ke']],
+            np.linspace(0, 5000, 501), 
+            labels=['Nucleons', 'Protons', 'Neutrons'], 
+            ylog=True, 
+            x_label='Kinetic Energy, Inclusive (MeV)')
+
+        for sparticle in ['nucleon', 'proton', 'neutron']:
+            plt.create_root_hist('%s_ke' % sparticle, 
+                                 self.ntuple['%s_ke' % sparticle], 
+                                 500, 0, 5000,
+                                 'Kinetic Energy, Inclusive (mev)', 
+                                 color=self.colors[0])
+       
+        plt.plot_hists([
             self.ntuple['hnucleon_ke'], 
             self.ntuple['hproton_ke'], 
             self.ntuple['hneutron_ke']],
             np.linspace(0, 5000, 501), 
             labels=['Hardest Nucleon', 'Hardest Proton', 'Hardest Neutron'], 
             ylog=True, 
-            x_label='Kinetic Energy (MeV)')
+            x_label='Kinetic Energy, Hardest (MeV)')
 
-        plt.create_root_hist('hnucleon_ke', 
-                             self.ntuple['hnucleon_ke'], 
-                             500, 0, 5000,
-                             'Kinetic Energy (MeV)', 
-                             color=self.colors[0])
-
-        plt.create_root_hist('hproton_ke', 
-                             self.ntuple['hproton_ke'], 
-                             500, 0, 5000,
-                             'Kinetic Energy (MeV)', 
-                             color=self.colors[1])
-
-        plt.create_root_hist('hneutron_ke', 
-                             self.ntuple['hneutron_ke'], 
-                             500, 0, 5000,
-                             'Kinetic Energy (MeV)', 
-                             color=self.colors[2])
+        for sparticle in ['hnucleon', 'hproton', 'hneutron']:
+            plt.create_root_hist('%s_ke' % sparticle, 
+                                 self.ntuple['%s_ke' % sparticle], 
+                                 500, 0, 5000,
+                                 'Kinetic Energy, Hardest (MeV)', 
+                                 color=self.colors[0])
 
         plt.plot_hists([
             self.ntuple['hnucleon_ke'][self.ntuple['hnucleon_theta'] > 100], 
@@ -454,6 +319,22 @@ class PnReWeightingAnalysis:
                              500, 0, 5000,
                              'Kinetic Energy (#theta > 100) (MeV)', 
                              color=self.colors[2])
+
+        plt.plot_hists([
+            self.ntuple['nucleon_w'], 
+            self.ntuple['proton_w'], 
+            self.ntuple['neutron_w']],
+            np.linspace(0, 5000, 501), 
+            labels=['Nucleons', 'Protons', 'Neutrons'], 
+            ylog=True, 
+            x_label='W, Inclusive (MeV)')
+
+        for sparticle in ['nucleon', 'proton', 'neutron']:
+            plt.create_root_hist('%s_w' % sparticle, 
+                                 self.ntuple['%s_w' % sparticle], 
+                                 500, 0, 5000,
+                                 'W, inclusive (MeV)', 
+                                 color=self.colors[0])
 
         plt.plot_hists([
             self.ntuple['hnucleon_w'], 
@@ -544,82 +425,131 @@ class PnReWeightingAnalysis:
                              'Sum of Highest W (MeV)', 
                              color=self.colors[0])
 
-        theta = 30
-        for itheta in xrange(0, 6):
-            plt.plot_hist(self.ntuple['hnucleon_ke_theta_%s_%s' % (theta, theta + 20)], 
-                np.linspace(0, 5000, 501), 
-                ylog=True,
-                x_label='Kinetic Energy (%s < $\theta$ < %s) (MeV)' % (theta, theta + 20))
-
-            plt.create_root_hist('hnucleon_ke_theta_%s_%s' % (theta, theta + 20), 
-                             self.ntuple['hnucleon_ke_theta_%s_%s' % (theta, theta + 20)], 
+        theta = 20
+        nucleon_ke_theta_array = []
+        nucleon_w_theta_array = []
+        labels = []
+        for itheta in xrange(0, 8): 
+            nucleon_ke_theta_array.append(self.ntuple['nucleon_ke_theta_%s_%s' % (theta, theta + 20)]) 
+            nucleon_w_theta_array.append(self.ntuple['nucleon_w_theta_%s_%s' % (theta, theta + 20)]) 
+            labels.append('$%s \leq \theta < %s$' % (theta, theta + 20))
+            
+            plt.create_root_hist('nucleon_ke_theta_%s_%s' % (theta, theta + 20), 
+                             self.ntuple['nucleon_ke_theta_%s_%s' % (theta, theta + 20)], 
                              500, 0, 5000,
-                             'Kinetic Energy (%s < #theta %s) (MeV)' % (theta, theta + 20), 
-                             color=self.colors[0])
+                             'Kinetic Energy, Inclusive, %s < #theta %s, (MeV)' % (theta, theta + 20), 
+                             color=self.colors[itheta])
 
-            plt.plot_hist(self.ntuple['hnucleon_w_theta_%s_%s' % (theta, theta + 20)], 
-                np.linspace(0, 5000, 501), 
-                ylog=True,
-                x_label='W (%s < $\theta$ < %s) (MeV)' % (theta, theta + 20))
-
-            plt.create_root_hist('hnucleon_w_theta_%s_%s' % (theta, theta + 20), 
-                             self.ntuple['hnucleon_w_theta_%s_%s' % (theta, theta + 20)], 
+            plt.create_root_hist('nucleon_w_theta_%s_%s' % (theta, theta + 20), 
+                             self.ntuple['nucleon_w_theta_%s_%s' % (theta, theta + 20)], 
                              500, 0, 5000,
-                             'W (%s < #theta %s) (MeV)' % (theta, theta + 20), 
-                             color=self.colors[0])
+                             'W, Inclusive, %s < #theta %s, (MeV)' % (theta, theta + 20), 
+                             color=self.colors[itheta])
+            theta += 20
 
+        plt.plot_hists(nucleon_ke_theta_array, 
+                      np.linspace(0, 3000, 301), 
+                      ylog=True,
+                      labels=labels,
+                      norm=True,
+                      x_label='Kinetic Energy, Inclusive (MeV)')
 
-            plt.plot_hist(self.ntuple['hw_nucleon_theta_%s_%s' % (theta, theta + 20)], 
-                np.linspace(0, 5000, 501), 
-                ylog=True,
-                x_label='Highest W, %s < theta < %s (MeV)' % (theta, theta + 20))
+        plt.plot_hists(nucleon_w_theta_array, 
+                      np.linspace(0, 3000, 301), 
+                      ylog=True,
+                      labels=labels, 
+                      norm=True,
+                      x_label='W, Inclusive (MeV)')
 
-            plt.create_root_hist('hw_nucleon_theta_%s_%s' % (theta, theta + 20), 
-                             self.ntuple['hw_nucleon_theta_%s_%s' % (theta, theta + 20)], 
-                             500, 0, 5000,
-                             'Highest W, %s < theta < %s (MeV)' % (theta, theta + 20), 
-                             color=self.colors[0])
+        theta = 20
+        for itheta in xrange(0, 8):
+           
+            for pindex, ptype in enumerate(['nucleon', 'proton', 'neutron']):
+
+                plt.plot_hist(self.ntuple['h%s_ke_theta_%s_%s' % (ptype, theta, theta + 20)], 
+                    np.linspace(0, 5000, 501), 
+                    ylog=True,
+                    x_label='Kinetic Energy, Hardest (%s < $\theta$ < %s) (MeV)' % (theta, theta + 20))
+
+                plt.create_root_hist('h%s_ke_theta_%s_%s' % (ptype, theta, theta + 20), 
+                                 self.ntuple['h%s_ke_theta_%s_%s' % (ptype, theta, theta + 20)], 
+                                 500, 0, 5000,
+                                 'Kinetic Energy, Hardest (%s < #theta %s) (MeV)' % (theta, theta + 20), 
+                                 color=self.colors[pindex])
+
+                plt.plot_hist(self.ntuple['h%s_w_theta_%s_%s' % (ptype, theta, theta + 20)], 
+                    np.linspace(0, 5000, 501), 
+                    ylog=True,
+                    x_label='W, Hardest (%s < $\theta$ < %s) (MeV)' % (theta, theta + 20))
+
+                plt.create_root_hist('h%s_w_theta_%s_%s' % (ptype, theta, theta + 20), 
+                                 self.ntuple['h%s_w_theta_%s_%s' % (ptype, theta, theta + 20)], 
+                                 500, 0, 5000,
+                                 'W, Hardest (%s < #theta %s) (MeV)' % (theta, theta + 20), 
+                                 color=self.colors[pindex])
+
+                plt.plot_hist(self.ntuple['hw_%s_theta_%s_%s' % (ptype, theta, theta + 20)], 
+                    np.linspace(0, 5000, 501), 
+                    ylog=True,
+                    x_label='Highest W, %s < theta < %s (MeV)' % (theta, theta + 20))
+
+                plt.create_root_hist('hw_%s_theta_%s_%s' % (ptype, theta, theta + 20), 
+                                 self.ntuple['hw_%s_theta_%s_%s' % (ptype, theta, theta + 20)], 
+                                 500, 0, 5000,
+                                 'Highest W, %s < theta < %s (MeV)' % (theta, theta + 20), 
+                                 color=self.colors[pindex])
             
             theta = theta + 20
 
-        plt.plot_hist(self.ntuple['hnucleon_ke_theta_150'], 
-                np.linspace(0, 5000, 501), 
-                ylog=True,
-                x_label='Kinetic Energy, theta > 150 (MeV)')
+        delta = .1
+        for idelta in xrange(25):
 
-        plt.create_root_hist('hnucleon_ke_theta_150', 
-                             self.ntuple['hnucleon_ke_theta_150'], 
-                             500, 0, 5000,
-                             'Kinetic Energy, theta > 150 (MeV)', 
-                             color=self.colors[0])
+            plt.plot_hist(self.ntuple['nucleon_w_delta_%s' % delta],
+                          np.linspace(0, 5000, 501), 
+                          ylog=True, 
+                          x_label='W, Inclusive, delta = %s (MeV)' % delta)
 
-        plt.plot_hist(self.ntuple['hnucleon_w_theta_150'], 
-                np.linspace(0, 5000, 501), 
-                ylog=True,
-                x_label='W ($\theta > 150$) (MeV)')
+            plt.create_root_hist('nucleon_w_delta_%s' % delta,
+                                 self.ntuple['nucleon_w_delta_%s' % delta],
+                                 500, 0, 5000,
+                                 'W, Inclusive, delta = %s (MeV)' % delta, 
+                                 color=self.colors[0])
 
-        plt.create_root_hist('hnucleon_w_theta_150', 
-                             self.ntuple['hnucleon_ke_theta_150'], 
-                             500, 0, 5000,
-                             'W, (#theta > 150) (MeV)', 
-                             color=self.colors[0])
-
-        plt.plot_hist(self.ntuple['hw_nucleon_theta_150'], 
-                np.linspace(0, 5000, 501), 
-                ylog=True,
-                x_label='Highest W, theta > 150 (MeV)')
-
-        plt.create_root_hist('hw_nucleon_theta_150', 
-                             self.ntuple['hw_nucleon_theta_150'], 
-                             500, 0, 5000,
-                             'Highest W, theta > 150 (MeV)', 
-                             color=self.colors[0])
-
+            delta += .1
 
         plt.close()
 
-    def calculate_w(self, particle): 
+    def calculate_w(self, particle, delta): 
         pvec = particle.getMomentum()
         p = la.norm(pvec)
         ke = particle.getEnergy() - particle.getMass()
-        return 0.5*(p + ke)*(1.12 - 0.5*(pvec[2]/p))
+        return 0.5*(p + ke)*(math.sqrt(1 + (delta*delta)) - delta*(pvec[2]/p))
+
+    def fill_angular_plots(self, pdg_id, ke, w, theta, theta_min, theta_max): 
+        
+        self.ntuple['nucleon_ke_theta_%s_%s' % (theta_min, theta_max)].append(ke)
+        self.ntuple['nucleon_w_theta_%s_%s' % (theta_min, theta_max)].append(w)
+
+        if ke > self.theta_variables['chnucleon_ke_theta']['theta_%s_%s' % (theta_min, theta_max)]:
+             self.theta_variables['chnucleon_ke_theta']['theta_%s_%s' % (theta_min, theta_max)] = ke
+             self.theta_variables['chnucleon_w_theta']['theta_%s_%s' % (theta_min, theta_max)] = w
+
+        if w > self.theta_variables['chw_nucleon_theta']['theta_%s_%s' % (theta_min, theta_max)]:
+            self.theta_variables['chw_nucleon_theta']['theta_%s_%s' % (theta_min, theta_max)] = w
+
+        if pdg_id == 2212: 
+            if ke > self.theta_variables['chproton_ke_theta']['theta_%s_%s' % (theta_min, theta_max)]:
+                self.theta_variables['chproton_ke_theta']['theta_%s_%s' % (theta_min, theta_max)] = ke
+                self.theta_variables['chproton_w_theta']['theta_%s_%s' % (theta_min, theta_max)] = w
+
+            if w > self.theta_variables['chw_proton_theta']['theta_%s_%s' % (theta_min, theta_max)]:
+                self.theta_variables['chw_proton_theta']['theta_%s_%s' % (theta_min, theta_max)] = w
+        
+        if pdg_id == 2112: 
+            if ke > self.theta_variables['chneutron_ke_theta']['theta_%s_%s' % (theta_min, theta_max)]:
+                self.theta_variables['chneutron_ke_theta']['theta_%s_%s' % (theta_min, theta_max)] = ke
+                self.theta_variables['chneutron_w_theta']['theta_%s_%s' % (theta_min, theta_max)] = w
+
+            if w > self.theta_variables['chw_neutron_theta']['theta_%s_%s' % (theta_min, theta_max)]:
+                self.theta_variables['chw_neutron_theta']['theta_%s_%s' % (theta_min, theta_max)] = w
+
