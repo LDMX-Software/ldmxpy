@@ -188,14 +188,17 @@ class Plotter(object):
         if 'color' in params: 
             color=params['color']
 
-        #histo = r.TH1F(name, name, bins, x_min, x_max)
+        weights = None
+        if 'weights' in params: 
+            weights = params['weights']
+
         histo = Hist(bins, x_min, x_max, name=name, title=name, type='F')
         histo.GetXaxis().SetTitle(x_label)
-        #histo.SetLineColor(color)
-        #histo.linecolor = color
-        #histo.linewidth = 2
-        #histo.markercolor = color
-        rnp.fill_hist(histo, values)
+        histo.GetXaxis().CenterTitle()
+        histo.SetLineColor(color)
+        histo.SetMarkerColor(color)
+        histo.SetMarkerSize(0.5)
+        rnp.fill_hist(histo, values, weights)
         histo.Write()
 
     def create_root_hist2d(self, name, x_vals, y_vals, bins_x, x_min, x_max, bins_y, y_min, y_max, **params): 
