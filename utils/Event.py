@@ -1,5 +1,8 @@
 
-import ROOT as r
+import ROOT as r 
+
+from rootpy.io import root_open
+from rootpy.io import DoesNotExist
 
 class Event(object):
 
@@ -18,10 +21,14 @@ class Event(object):
         for collection in config['Collections']:
             self.collections[collection.keys()[0]] = r.TClonesArray(collection.values()[0])
 
-    def load_file(self, rfile_path):
-        self.rfile = r.TFile(rfile_path)
+    def load_file(self, rfile_path, tree_name):
         
-        self.tree = self.rfile.Get("LDMX_Events")
+        self.rfile = root_open(rfile_path)
+        try: 
+            self.tree = self.rfile.Get(tree_name)
+        except DoesNotExist: 
+            print 'Tree does not exist.'
+        
         for name, collection in self.collections.iteritems():
             self.tree.SetBranchAddress(name, collection)
         self.tree.SetBranchAddress("EventHeader", 
@@ -53,3 +60,5 @@ class Event(object):
     def get_file_name(self): 
         return self.rfile.GetName()
 
+    def get_weight(self): 
+        return self.event_header.getWeight()
