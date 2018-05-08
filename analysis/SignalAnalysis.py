@@ -2,239 +2,162 @@
 from __future__ import division
 
 import math
-import numpy as np
-import Plotter
-import ROOT as r
 
 from numpy import linalg as la
+from rootpy.tree import Tree
+
+import AnalysisUtils as au
+from EventModels import SignalEvent
 
 class SignalAnalysis:
 
     def __init__(self): 
-        self.initialize()
+        self.tree = None
 
     def initialize(self):
-        
-        self.events = []
-
-        self.ap_mass = []
-        
-        self.recoil_e_truth_p  = []
-        self.recoil_e_truth_pt = []
-        self.recoil_e_truth_px = []
-        self.recoil_e_truth_py = []
-        self.recoil_e_truth_pz = []
-
-        #self.recoil_e_theta = 
-
-        self.recoil_is_findable = []
-        self.recoil_is_3p1_findable = []
-        self.recoil_is_2p2_findable = []
-        
-        self.missing_layer = []
-        self.missing_layer_apmass = []
-
-        self.triggered = []
+        self.tree = Tree('signal_ntuple', model=SignalEvent)
 
     def process(self, event):
         
-        #print 'Event: %s' % event.get_event_number()
-
         # Get the collection of MC particles from the event
-        particles = event.get_collection('SimParticles')
-        
-        if particles.GetEntriesFast() == 0: return
-
-        # Recoil electron
-        recoil_e = None
-
-        # A'
-        aprime = None
+        particles = event.get_collection('SimParticles_sim')
        
-        for particle in particles: 
+        # Search the list of sim particles for the recoil electron. If it isn't 
+        # found, throw an exception
+        recoil_e = au.get_recoil_electron(particles)
 
-            #print 'PDG ID: %s' % particle.getPdgID()
-            #print 'Status: %s' % particle.getGenStatus()
-            if (particle.getPdgID() == 11) & (particle.getGenStatus() == 1):
-                recoil_e = particle
-
-            if particle.getPdgID() == 622: 
-                aprime = particle
-
-        self.ap_mass.append(aprime.getMass())
-
-        # Calculate the truth momentum of the recoil
-        recoil_e_pvec = recoil_e.getMomentum()
-        self.recoil_e_truth_p.append(la.norm(recoil_e_pvec))
-        self.recoil_e_truth_pt.append(
-                math.sqrt(recoil_e_pvec[0]*recoil_e_pvec[0] + recoil_e_pvec[1]*recoil_e_pvec[1]))
-        self.recoil_e_truth_px.append(recoil_e_pvec[0]) 
-        self.recoil_e_truth_py.append(recoil_e_pvec[1]) 
-        self.recoil_e_truth_pz.append(recoil_e_pvec[2]) 
-
-        recoil_sim_hits = event.get_collection('RecoilSimHits')
-        recoil_e_hit_count = np.zeros(10)
-        for recoil_sim_hit in recoil_sim_hits:
-            if recoil_sim_hit.getSimParticle() == recoil_e:
-                recoil_e_hit_count[recoil_sim_hit.getLayerID() - 1] += 1 
+        aprime = au.get_ap(particles)
         
-        n_stereo_hits = 0
-        is_3p1_findable = False
-        is_2p2_findable = False
-        for layer_n in xrange(0, 8):
-            if recoil_e_hit_count[layer_n]*recoil_e_hit_count[layer_n + 1] != 0: 
-                n_stereo_hits += 1
+        if not recoil_e:
+            raise RuntimeError('Recoil electron was not found!')
 
-        if n_stereo_hits > 3:
-            is_3p1_findable = True
-            is_2p2_findable = True
-        if (n_stereo_hits == 3) & ((recoil_e_hit_count[8] > 0) or (recoil_e_hit_count[9] > 0)):
-            is_3p1_findable = True
-            is_2p2_findable = True
-        if (n_stereo_hits == 2) & ((recoil_e_hit_count[8] > 0) or (recoil_e_hit_count[9] > 0)):
-            is_2p2_findable = True
+        if not aprime:
+            raise RuntimeError("A' was not found.")
 
-        if is_3p1_findable or is_2p2_findable: 
-            self.recoil_is_findable.append(1)
-        else: self.recoil_is_findable.append(0)
+        self.tree.ap_mass =  aprime.getMass()
 
-        if is_3p1_findable: self.recoil_is_3p1_findable.append(1)
-        else: self.recoil_is_3p1_findable.append(0)
+        # Calculate the e- recoil truth momentum
+        recoil_e_tpvec  = recoil_e.getMomentum()
+        recoil_e_tp     = la.norm(recoil_e_tpvec)
+        recoil_e_tpt    = math.sqrt(recoil_e_tpvec[0]*recoil_e_tpvec[0] 
+                                  + recoil_e_tpvec[1]*recoil_e_tpvec[1])
+
+        self.tree.recoil_e_truth_p  =  recoil_e_tp
+        self.tree.recoil_e_truth_pt =  recoil_e_tpt
+        self.tree.recoil_e_truth_px =  recoil_e_tpvec[0]
+        self.tree.recoil_e_truth_py =  recoil_e_tpvec[1]
+        self.tree.recoil_e_truth_pz =  recoil_e_tpvec[2]
         
-        if is_2p2_findable: self.recoil_is_2p2_findable.append(1)
-        else: self.recoil_is_2p2_findable.append(0)
+        '''
+        #
+        # Ecal
+        #
+        ecal_hits = event.get_collection('EcalSimHits_sim')
 
-        if not is_3p1_findable and not is_2p2_findable: 
-            for layer_n in xrange(0, 10):
-                if recoil_e_hit_count[layer_n] == 0:
-                    self.missing_layer.append(layer_n + 1)
-                    self.missing_layer_apmass.append(aprime.getMass())
+        for ecal_hit in ecal_hits:
 
+            is_recoil_e_hit = 0
+            for icontrib in xrange(0, ecal_hit.getNumberOfContribs()):
+                contrib = ecal_hit.getContrib(icontrib)
+                if contrib.particle == recoil_e: 
+                    is_recoil_e_hit = 1
+                    break
 
-        trigger_results = event.get_collection('Trigger')
-        for trigger_result in trigger_results: 
-            if trigger_result.passed(): self.triggered.append(1)
-            else: self.triggered.append(0)
+            self.tree.ecal_is_recoil_e_hit.push_back(is_recoil_e_hit)
+            self.tree.ecal_hit_energy.push_back(ecal_hit.getEdep())
+            self.tree.ecal_hit_x.push_back(ecal_hit.getPosition()[0])
+            self.tree.ecal_hit_y.push_back(ecal_hit.getPosition()[1])
+
+        # Get the collection of digitized Ecal hits
+        ecal_dhits = event.get_collection('ecalDigis_recon')
+        
+        ecal_dhit_count = 0
+        layer_sum = 0
+        layers = []
+        ecal_hit_x = []
+        ecal_hit_y = []
+        denergy_sum = 0
+        max_denergy_cell = 0
+        max_layer_hit = 0
+        for ecal_dhit in ecal_dhits: 
+
+            # Get the digitized hit energy
+            denergy = ecal_dhit.getEnergy()
+
+            # Currently, if the energy of a digitized hit is below threshold,
+            # its energy is set to zero.  These hits aren't considered.
+            if denergy == 0: continue 
+            ecal_dhit_count += 1
+
+            self.tree.ecal_dhit_energy.push_back(denergy)
+            denergy_sum += denergy
+
+            layer = ecal_dhit.getLayer()
+            layers.append(layer)
+            self.tree.ecal_dhit_layer.push_back(layer)
+            layer_sum += layer
+
+            # Find the hex cell with the largest energy deposition
+            max_denergy_cell = max(denergy, max_denergy_cell)
+            
+            max_layer_hit = max(max_layer_hit, layer)
+
+        self.tree.ecal_dhit_count = ecal_dhit_count
+        self.tree.average_ecal_layer_hit = -9999
+        if ecal_dhit_count != 0: 
+            self.tree.average_ecal_layer_hit = layer_sum/ecal_dhit_count
+        self.tree.total_ecal_denergy = denergy_sum
+        self.tree.ecal_max_denergy_cell = max_denergy_cell
+        self.tree.ecal_max_layer_hit = max_layer_hit
+        self.ecal_layer_std = np.std(np.array(layers)) 
+
+        # Get the collection of Ecal veto results from the event
+        ecal_veto_results = event.get_collection('EcalVeto_recon')
+        
+        self.tree.ecal_summed_tight_iso = ecal_veto_results[0].getSummedTightIso()
+        self.tree.ecal_shower_rms = ecal_veto_results[0].getShowerRMS()
+        self.tree.ecal_x_pos_std = ecal_veto_results[0].getXStd()
+        self.tree.ecal_y_pos_std = ecal_veto_results[0].getYStd()
+
+        # Get the BDT probability.
+        self.tree.bdt_prob = ecal_veto_results[0].getDisc()
+
+        target_sp_hits = event.get_collection('TargetScoringPlaneHits_sim')
+        self.tree.single_trk_p = -9999
+        self.tree.single_trk_pdg = -9999
+        if len(findable_dic) == 1:
+            #print '[ TargetPhotoNuclearAnalysis ]: Only have a single findable track.'
+            findable_track = findable_dic.itervalues().next()
+            sim_particle = findable_track.getSimParticle()
+            self.tree.single_trk_pdg = findable_track.getSimParticle().getPdgID()
+            p_find = la.norm(sim_particle.getMomentum())
+            #print '[ TargetPhotoNuclearAnalysis ]: p of findable track: %s' % p_find
+            #if is_recoil: print '[ TargetPhotoNuclearAnalysis ]: Findable track is recoil e.'
+            #print 'Sim particle:'
+            #sim_particle.Print()
+            min = 10000
+            for target_sp_hit in target_sp_hits: 
+                if target_sp_hit.getSimParticle() == sim_particle: 
+                    #print '[ TargetPhotoNuclearAnalysis ]: Iterating over target sp sim particle.'
+                    #target_sp_hit.getSimParticle().Print()
+                    pvec = target_sp_hit.getMomentum()
+                    if pvec[2] < 0: 
+                        #print '[ TargetPhotoNuclearAnalysis ]: particle is going backwards, pz = %s' % pvec[2] 
+                        continue
+                    p = la.norm(pvec)
+                    #print '[ TargetPhotoNuclearAnalysis ]: Momentum at scoring plane: %s' % p
+                    diff = p_find - p
+                    
+                    if diff < min: 
+                        #print '[ TargetPhotoNuclearAnalysis ]: Found best match'
+                        self.tree.single_trk_p = p
+                        min = diff
+        '''
+
+        self.tree.fill(reset=True)
 
     def finalize(self): 
-       
-        masses = np.unique(self.ap_mass)
-        self.recoil_is_findable = np.array(self.recoil_is_findable)
-        self.recoil_is_3p1_findable = np.array(self.recoil_is_3p1_findable)
-        self.recoil_is_2p2_findable = np.array(self.recoil_is_2p2_findable)
-        self.ap_mass = np.array(self.ap_mass)
-        self.recoil_e_truth_p = np.array(self.recoil_e_truth_p)
-        self.recoil_e_truth_pt = np.array(self.recoil_e_truth_pt)
-        self.triggered = np.array(self.triggered)
-        self.missing_layer = np.array(self.missing_layer)
-        self.missing_layer_apmass = np.array(self.missing_layer_apmass)
+      
+        self.tree.write()
 
-        labels = []
-        
-        accep = []
-        accep_pcut = []
 
-        trk_accep = []
-        trk_accep_3p1 = []
-        trk_accep_2p2 = []
-        trk_accep_pcut = []
-        trk_accep_energy_cut_err = []
-        trk_accep_err = np.zeros(len(masses))
-
-        recoil_e_truth_p_mass  = []
-        recoil_e_truth_pt_mass = []
-        
-        missing_layer_mass = []
-
-        trigger_accep = []
-        trigger_accep_pcut = []
-
-        for mass in masses:
-            recoil_is_findable_mass = self.recoil_is_findable[self.ap_mass == mass]
-            recoil_is_findable_mass_pcut = self.recoil_is_findable[(self.ap_mass == mass) & (self.recoil_e_truth_p < 1200)]
-            print len(recoil_is_findable_mass)
-            print len(recoil_is_findable_mass_pcut)
-            trigger_mass = self.triggered[self.ap_mass == mass]
-            trigger_mass_pcut = self.triggered[(self.ap_mass == mass) & (self.recoil_e_truth_p < 1200)]
-           
-            accep.append(
-                    (len(recoil_is_findable_mass[(recoil_is_findable_mass == 1) 
-                        & (trigger_mass == 1)])/len(recoil_is_findable_mass))*100)
-
-            accep_pcut.append(
-                    (len(recoil_is_findable_mass_pcut[(recoil_is_findable_mass_pcut == 1) 
-                        & (trigger_mass_pcut == 1)])/len(recoil_is_findable_mass_pcut))*100)
-            trk_accep.append(
-                    (len(recoil_is_findable_mass[recoil_is_findable_mass == 1])/len(recoil_is_findable_mass))*100)
-        
-            recoil_is_findable_mass = self.recoil_is_3p1_findable[self.ap_mass == mass]
-            trk_accep_3p1.append(
-                    (len(recoil_is_findable_mass[recoil_is_findable_mass == 1])/len(recoil_is_findable_mass))*100)
-            
-            recoil_is_findable_mass = self.recoil_is_2p2_findable[self.ap_mass == mass]
-            trk_accep_2p2.append(
-                    (len(recoil_is_findable_mass[recoil_is_findable_mass == 1])/len(recoil_is_findable_mass))*100)
-
-            trk_accep_pcut.append(
-                    (len(recoil_is_findable_mass_pcut[recoil_is_findable_mass_pcut == 1])/len(recoil_is_findable_mass_pcut))*100)
-            
-            recoil_e_truth_p_mass.append(self.recoil_e_truth_p[self.ap_mass == mass])
-            recoil_e_truth_pt_mass.append(self.recoil_e_truth_pt[self.ap_mass == mass])
-            
-            missing_layer_mass.append(self.missing_layer[self.missing_layer_apmass == mass])
-
-            trigger_accep.append((len(trigger_mass[trigger_mass == 1])/len(trigger_mass))*100)
-            trigger_accep_pcut.append((len(trigger_mass_pcut[trigger_mass_pcut == 1])/len(trigger_mass_pcut))*100)
-            
-            labels.append("$A'$ mass: %s MeV" % mass) 
-        
-        trk_accep_arr = [trk_accep, trk_accep_3p1, trk_accep_2p2, trk_accep_pcut]
-        mass_arr = [masses, masses, masses, masses]
-
-        plt = Plotter.Plotter('signal_analysis.pdf')
-
-        plt.plot_hists(recoil_e_truth_p_mass, 
-                       np.linspace(0, 4000, 120), 
-                       labels=labels,
-                       norm=True,
-                       x_label='$p(e^{-})$ (GeV)',
-                       ylog=True)
-        
-        plt.plot_hists(recoil_e_truth_pt_mass, 
-                       np.linspace(0, 500, 90), 
-                       labels=labels,
-                       norm=True,
-                       ylog=True, 
-                       x_label='$p_{t}(e^{-})$ (GeV)')
-       
-        plt.plot_graphs([masses, masses], [trigger_accep, trigger_accep_pcut], 
-                       np.zeros(len(masses)), np.zeros(len(masses)),
-                       labels=['All', 'p < 1.2 GeV'],
-                       xlog = True, 
-                       x_label="$A'$ Mass (MeV)",
-                       y_label="Trigger acceptance (%)", 
-                       ylim=[0, 100])
-
-        plt.plot_graphs([masses, masses], [accep, accep_pcut],
-                       np.zeros(len(masses)), np.zeros(len(masses)), 
-                       labels=['All', 'p < 1.2 GeV'],
-                       xlog=True,
-                       x_label="$A'$ Mass (MeV)",
-                       y_label="Total Acceptance (%)", 
-                       ylim=[0, 100])
-        
-        plt.plot_graphs(mass_arr, trk_accep_arr, 
-                        np.zeros(len(masses)), np.zeros(len(masses)),
-                        labels=['3p1+2p2', '3p1', '2p2', '3p1+2p2, p < 1.2 GeV'],
-                        xlog=True,
-                        x_label="$A'$ Mass (MeV)",
-                        y_label="Tracker Acceptance (%)",
-                        ylim=[0, 100])
-
-        plt.plot_hists(missing_layer_mass, 
-                       np.linspace(0, 11, 12), 
-                       labels=labels,
-                       norm=True,
-                       x_label='Missing Recoil $e^-$ Hit')
-
-        plt.close()
