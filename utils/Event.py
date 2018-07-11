@@ -48,6 +48,10 @@ class Event(object):
         self.entry += 1
         return True
 
+    def collection_exist(self, collection_name):
+        if collection_name in self.collections: return True
+        else: return False
+
     def get_collection(self, collection_name):
         return self.collections[collection_name]
 
