@@ -34,9 +34,20 @@ class ElectroNuclearAnalysis(object):
         # found, throw an exception
         recoil_e = au.get_recoil_electron(particles)
 
-        self.tree.recoil_e_vertex_x = recoil_e.getVertex()[0]
-        self.tree.recoil_e_vertex_y = recoil_e.getVertex()[1]
-        self.tree.recoil_e_vertex_z = recoil_e.getVertex()[2]
+        self.tree.recoil_e_vx = recoil_e.getVertex()[0]
+        self.tree.recoil_e_vy = recoil_e.getVertex()[1]
+        self.tree.recoil_e_vz = recoil_e.getVertex()[2]
+        
+        # Get all of the tracker hits in the event
+        recoil_hits = event.get_collection('SiStripHits_recon')
+
+        # Loop through of all the hits and find the truth momentum of the recoil 
+        for recoil_hit in recoil_hits: 
+            recoil_sim_hit = recoil_hit.getSimTrackerHits().At(0)
+            if recoil_sim_hit.getLayerID() == 1:
+                if recoil_sim_hit.getSimParticle() == recoil_e:
+                    self.tree.recoil_e_tp = la.norm(recoil_sim_hit.getMomentum())
+                    break
 
         # Use the recoil electron to retrieve the electronuclear daughters
         en_daughters = []
@@ -84,7 +95,6 @@ class ElectroNuclearAnalysis(object):
         findable_tracks = event.get_collection('FindableTracks_recon')
         findable_dic, stub_dic, axial_dic = au.get_findable_tracks_map(findable_tracks)
       
-        recoil_hits = event.get_collection('SiStripHits_recon')
         if len(findable_dic) == 1: 
             
             findable_track = findable_dic.itervalues().next()
