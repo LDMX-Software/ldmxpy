@@ -32,8 +32,6 @@ def main() :
     n_events = 0
     if args.n_events: n_events = args.n_event
 
-    #ldmx_lib_path = os.environ['LDMX_SW_DIR'] + "/install/lib/libEvent.so"
-
     # Parse the configuration file
     config = parse_config(args.config)
     
@@ -45,11 +43,32 @@ def main() :
         analysis_class = getattr(importlib.import_module(analysis_module_name), analysis_class_name)
         analyses_instances.append(analysis_class())
 
+    files = []
+    if "Files" in config:
+        files = config["Files"]
+    elif "FileList" in config: 
+        flist = open(config["FileList"][0], 'r')
+        for f in flist: 
+            files.append(f.strip())
+
+    ofile_path = 'analysis.root'
+    if 'OutputFile' in config: 
+        ofile_path = config['OutputFile'][0]
+
+    ofile = root_open(ofile_path, 'recreate')
+    
+    for analyses in analyses_instances : 
+        analyses.initialize()
+   
+    tree_name = 'LDMX_Events'
+    if 'TreeName' in config: 
+        tree_name = config['TreeName'][0]
+
     event = e.Event(config)
     # Loop through all of the ROOT files and process them.
-    for rfile_path in config["Files"] :
+    for rfile_path in files :
         print 'Processing file %s' % rfile_path
-        event.load_file(rfile_path)
+        event.load_file(rfile_path, tree_name)
         
         event_counter = 0
         while event.next_event():
@@ -65,6 +84,8 @@ def main() :
 
     for analyses in analyses_instances : 
         analyses.finalize()
+        
+    ofile.close()
 
 if __name__ == "__main__":
     main()
