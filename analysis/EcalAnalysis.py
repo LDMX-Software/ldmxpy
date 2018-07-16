@@ -4,7 +4,7 @@ from numpy import linalg as la
 from rootpy.tree import Tree
 
 import AnalysisUtils as au
-import Line as l
+#import Line as l
 
 from EventModels import EcalEvent
 
