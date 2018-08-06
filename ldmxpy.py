@@ -30,7 +30,7 @@ def main() :
         parser.error('A configuration file needs to be specified.')
 
     n_events = 0
-    if args.n_events: n_events = args.n_event
+    if args.n_events: n_events = args.n_events
 
     # Parse the configuration file
     config = parse_config(args.config)
