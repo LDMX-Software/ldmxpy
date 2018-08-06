@@ -10,24 +10,25 @@ def get_theta_z(particle):
     p = la.norm(pvec)
     return math.acos(pvec[2]/p)*(180/math.pi)
 
-def get_recoil_electron(particles): 
+def get_recoil_electrons(particles): 
 
-    # Loop through all of the particle and search for the recoil electron i.e.
+    # Loop through all of the particles and search for the recoil electron i.e.
     # an electron which doesn't have any parents
-    recoil_e = None
+    recoils = []
     for particle in particles:
             
-        # If the particle is an electron and has no parents, the recoil
+        # If the particle is an electron and has no parents, a recoil
         # has been found
-        if (particle.getPdgID()) & (particle.getParentCount() == 0) : 
-            recoil_e = particle
-            break
+        if (particle.getPdgID()) & (particle.getParentCount() == 0):
+            recoils.append(particle)
+            #recoil_e = particle
+            #break
 
     # All events should contain a recoil electron
-    if not recoil_e: 
+    if len(recoils) == 0: 
         raise RuntimeError('Recoil electron was not found!')
 
-    return recoil_e
+    return recoils
 
 def get_pn_gamma(recoil_e): 
     
