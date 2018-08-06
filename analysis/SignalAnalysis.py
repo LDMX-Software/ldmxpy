@@ -24,29 +24,31 @@ class SignalAnalysis:
        
         # Search the list of sim particles for the recoil electron. If it isn't 
         # found, throw an exception
-        recoil_e = au.get_recoil_electron(particles)
+        recoils = au.get_recoil_electrons(particles)
+        self.tree.n_electrons = len(recoils)
+
+        # Calculate the e- recoil truth momentum
+        for i, recoil in enumerate(recoils): 
+            recoil_e_tpvec  = recoil.getMomentum()
+            recoil_e_tp     = la.norm(recoil_e_tpvec)
+            recoil_e_tpt    = math.sqrt(recoil_e_tpvec[0]*recoil_e_tpvec[0] 
+                                      + recoil_e_tpvec[1]*recoil_e_tpvec[1])
+        
+            self.tree.recoil_e_truth_p[i]  = recoil_e_tp
+            self.tree.recoil_e_truth_pt[i] = recoil_e_tpt
+            self.tree.recoil_e_truth_px[i] = recoil_e_tpvec[0]
+            self.tree.recoil_e_truth_py[i] = recoil_e_tpvec[1]
+            self.tree.recoil_e_truth_pz[i] = recoil_e_tpvec[2]
+
 
         aprime = au.get_ap(particles)
         
-        if not recoil_e:
-            raise RuntimeError('Recoil electron was not found!')
-
         if not aprime:
             raise RuntimeError("A' was not found.")
 
         self.tree.ap_mass =  aprime.getMass()
 
-        # Calculate the e- recoil truth momentum
-        recoil_e_tpvec  = recoil_e.getMomentum()
-        recoil_e_tp     = la.norm(recoil_e_tpvec)
-        recoil_e_tpt    = math.sqrt(recoil_e_tpvec[0]*recoil_e_tpvec[0] 
-                                  + recoil_e_tpvec[1]*recoil_e_tpvec[1])
 
-        self.tree.recoil_e_truth_p  =  recoil_e_tp
-        self.tree.recoil_e_truth_pt =  recoil_e_tpt
-        self.tree.recoil_e_truth_px =  recoil_e_tpvec[0]
-        self.tree.recoil_e_truth_py =  recoil_e_tpvec[1]
-        self.tree.recoil_e_truth_pz =  recoil_e_tpvec[2]
         
         '''
         #
