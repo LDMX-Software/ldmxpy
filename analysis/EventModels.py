@@ -162,9 +162,9 @@ class PhotoNuclearEvent(TreeModel):
     recoil_e_truth_px = FloatCol() 
     recoil_e_truth_py = FloatCol() 
     recoil_e_truth_pz = FloatCol()
-    recoil_e_vertex_x = FloatCol()
-    recoil_e_vertex_y = FloatCol()
-    recoil_e_vertex_z = FloatCol()
+    recoil_e_vertex_x  = cppyy.gbl.std.vector('double')
+    recoil_e_vertex_y  = cppyy.gbl.std.vector('double') 
+    recoil_e_vertex_z  = cppyy.gbl.std.vector('double')
 
     pn_weight = FloatCol()
 
@@ -190,6 +190,8 @@ class PhotoNuclearEvent(TreeModel):
     is_diproton       = IntCol(default=-9999)
     is_pn             = IntCol(default=-9999)
     is_ghost          = IntCol(default=0)
+
+    n_electrons       = IntCol(default=0)
 
 class ElectroNuclearEvent(TreeModel): 
     
