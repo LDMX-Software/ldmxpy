@@ -31,15 +31,23 @@ class PhotoNuclearAnalysis(object):
 
         # Search the list of sim particles for the recoil electron.  If it isn't
         # found, throw an exception.
-        recoil_e = au.get_recoil_electron(particles)
+        #recoil_e = au.get_recoil_electron(particles)
 
-        self.tree.recoil_e_vertex_x = recoil_e.getVertex()[0]
-        self.tree.recoil_e_vertex_y = recoil_e.getVertex()[1]
-        self.tree.recoil_e_vertex_z = recoil_e.getVertex()[2]
+        # Search the list of sim particles for the recoil electron. If it isn't 
+        # found, throw an exception
+        recoils = au.get_recoil_electrons(particles)
+        self.tree.n_electrons = len(recoils)
+
+        
+        # Get the e- recoil truth information
+        for i, recoil in enumerate(recoils): 
+            self.tree.recoil_e_vertex_x.push_back(recoil.getVertex()[0])
+            self.tree.recoil_e_vertex_y.push_back(recoil.getVertex()[1])
+            self.tree.recoil_e_vertex_z.push_back(recoil.getVertex()[2])
 
         # Use the recoil electron to retrieve the gamma that underwent a 
         # photonuclear reaction.
-        pn_gamma = au.get_pn_gamma(recoil_e)
+        pn_gamma = au.get_pn_gamma(recoils)
 
         self.tree.pn_particle_mult = pn_gamma.getDaughterCount()
         self.tree.pn_gamma_energy  = pn_gamma.getEnergy()
