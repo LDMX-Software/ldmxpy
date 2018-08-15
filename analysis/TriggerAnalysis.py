@@ -13,13 +13,20 @@ class TriggerAnalysis(object):
 
     def process(self, event): 
 
-        # Get the collection of trigger results from the collection
-        trigger_results = event.get_collection('Trigger_recon')
+        # Check if the trigger collection exist. If it does, use it to get the
+        # trigger result. Otherwise, calculate the trigger result.
+        if event.collection_exist('Trigger_recon'): 
+            
+            # Get the collection of trigger results from the collection
+            trigger_results = event.get_collection('Trigger_recon')
 
-        # Set the trigger flag.
-        if trigger_results[0].passed(): self.tree.triggered =  1
-        else: self.tree.triggered =  0
-       
+            # Set the trigger flag.
+            if trigger_results[0].passed(): self.tree.triggered =  1
+            else: self.tree.triggered =  0
+
+            # Get the ECal energy sum used by the trigger decision
+            self.tree.layer_sum = trigger_results[0].getAlgoVar(0)
+
         # Fill the tree
         self.tree.fill(reset=True)
 
