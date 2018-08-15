@@ -17,14 +17,15 @@ class TrackerAnalysis(object):
     def process(self, event): 
 
         # Get the FindableTracks collection from the event
-        findable_tracks = event.get_collection('FindableTracks_recon')
-        findable_dic, loose_dic, axial_dic = au.get_findable_tracks_map(findable_tracks)
+        if event.collection_exist('FindableTracks_recon'):
+            findable_tracks = event.get_collection('FindableTracks_recon')
+            findable_dic, loose_dic, axial_dic = au.get_findable_tracks_map(findable_tracks)
         
-        findable_particles = findable_dic.keys()
+            findable_particles = findable_dic.keys()
 
-        self.tree.recoil_track_count        = len(findable_dic)
-        self.tree.recoil_loose_track_count  = len(loose_dic)
-        self.tree.recoil_axial_track_count  = len(axial_dic)
+            self.tree.recoil_track_count        = len(findable_dic)
+            self.tree.recoil_loose_track_count  = len(loose_dic)
+            self.tree.recoil_axial_track_count  = len(axial_dic)
 
         #
         # Hit Level
