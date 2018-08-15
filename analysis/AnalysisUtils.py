@@ -30,22 +30,24 @@ def get_recoil_electrons(particles):
 
     return recoils
 
-def get_pn_gamma(recoil_e): 
+def get_pn_gamma(recoils): 
     
     # Search for the PN gamma and use it to get the PN daughters
     pn_gamma = None
-    for daughter_count in xrange(0, recoil_e.getDaughterCount()):
-        daughter = recoil_e.getDaughter(daughter_count)
+    
+    for recoil_e in recoils: 
+        for daughter_count in xrange(0, recoil_e.getDaughterCount()):
+            daughter = recoil_e.getDaughter(daughter_count)
         
-        #daughter.Print()
-        #if (daughter.getDaughterCount() > 0): 
-            #print '###'
-            #daughter.getDaughter(0).Print()
+            #daughter.Print()
+            #if (daughter.getDaughterCount() > 0): 
+                #print '###'
+                #daughter.getDaughter(0).Print()
 
-        if (daughter.getDaughterCount() > 0) and \
-                (daughter.getDaughter(0).getProcessType() == 9): 
-            pn_gamma = daughter
-            break
+            if (daughter.getDaughterCount() > 0) and \
+                    (daughter.getDaughter(0).getProcessType() == 9): 
+                pn_gamma = daughter
+                break
     
     # When looking at photonuclear events, a recoil electron should always have
     # a PN gamma associated with it.
