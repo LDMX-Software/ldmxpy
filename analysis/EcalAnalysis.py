@@ -66,26 +66,23 @@ class EcalAnalysis(object):
         self.tree.ecal_max_layer_hit = max_layer_hit
         self.tree.ecal_max_denergy_cell = max_cell_energy
         
-        # Get the collection of Ecal veto results from the event
-        ecal_veto_results = event.get_collection('EcalVeto_recon')
-       
-        self.tree.vecal_max_denergy_cell = ecal_veto_results[0].getMaxCellDep()
-        self.tree.vtotal_ecal_denergy    = ecal_veto_results[0].getSummedDet()
-        self.tree.vecal_max_layer_hit    = ecal_veto_results[0].getDeepestLayerHit()
-        self.tree.vecal_summed_tight_iso = ecal_veto_results[0].getSummedTightIso()
-        self.tree.vecal_shower_rms = ecal_veto_results[0].getShowerRMS()
-        self.tree.vecal_x_pos_std = ecal_veto_results[0].getXStd()
-        self.tree.vecal_y_pos_std = ecal_veto_results[0].getYStd()
-        self.tree.vecal_layer_std = ecal_veto_results[0].getStdLayerHit()
-        self.tree.vaverage_ecal_layer_hit = ecal_veto_results[0].getAvgLayerHit()
-       
         # Check if the ECal veto collection exist. If it does, use it to get the
         # BDT result. 
         if event.collection_exist('EcalVeto_recon'): 
-            
+       
             # Get the collection of BDT results from the event.
             ecal_veto_results = event.get_collection('EcalVeto_recon')
-            
+
+            self.tree.vecal_max_denergy_cell = ecal_veto_results[0].getMaxCellDep()
+            self.tree.vtotal_ecal_denergy    = ecal_veto_results[0].getSummedDet()
+            self.tree.vecal_max_layer_hit    = ecal_veto_results[0].getDeepestLayerHit()
+            self.tree.vecal_summed_tight_iso = ecal_veto_results[0].getSummedTightIso()
+            self.tree.vecal_shower_rms = ecal_veto_results[0].getShowerRMS()
+            self.tree.vecal_x_pos_std = ecal_veto_results[0].getXStd()
+            self.tree.vecal_y_pos_std = ecal_veto_results[0].getYStd()
+            self.tree.vecal_layer_std = ecal_veto_results[0].getStdLayerHit()
+            self.tree.vaverage_ecal_layer_hit = ecal_veto_results[0].getAvgLayerHit()
+ 
             # Get the BDT probability.
             self.tree.bdt_prob = ecal_veto_results[0].getDisc()
             
