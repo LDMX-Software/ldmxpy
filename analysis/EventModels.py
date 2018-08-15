@@ -1,8 +1,9 @@
 
 from rootpy.tree import TreeModel
-from rootpy.tree import IntCol, FloatCol
+from rootpy.tree import IntCol, FloatCol, FloatArrayCol
 
-import rootpy.stl as stl, ROOT
+import cppyy
+
 
 class Event(TreeModel): 
 
@@ -23,34 +24,31 @@ class HcalEvent(TreeModel):
 
 class EcalEvent(TreeModel):
 
-    ecal_dhit_count         = IntCol()
+    ecal_dhit_count         = IntCol(default=0)
     
-    average_ecal_layer_hit  = FloatCol()
-    ecal_layer_std          = FloatCol()
-    ecal_max_denergy_cell   = FloatCol()
-    ecal_max_layer_hit      = FloatCol()
-    ecal_x_pos_mean         = FloatCol()
-    ecal_x_pos_std          = FloatCol()
-    ecal_y_pos_mean         = FloatCol()
-    ecal_y_pos_std          = FloatCol()
-    ecal_shower_rms         = FloatCol()
-    ecal_summed_tight_iso   = FloatCol()
-    
-    total_ecal_denergy      = FloatCol()
+    average_ecal_layer_hit  = FloatCol(default=-9999)
+    ecal_max_denergy_cell   = FloatCol(default=-9999)
+    ecal_max_layer_hit      = FloatCol(default=-9999)
+   
+    vecal_max_layer_hit      = FloatCol(default=-9999)
+    vecal_layer_std          = FloatCol(default=-9999)
+    vecal_x_pos_std          = FloatCol(default=-9999)
+    vecal_y_pos_std          = FloatCol(default=-9999)
+    vecal_shower_rms         = FloatCol(default=-9999)
+    vecal_summed_tight_iso   = FloatCol(default=-9999)
+    vecal_max_denergy_cell   = FloatCol(default=-9999)
+    vtotal_ecal_denergy      = FloatCol(default=0)
+    vaverage_ecal_layer_hit  = FloatCol(default=-9999)
+   
+    ecal_dhit_energy = cppyy.gbl.std.vector('double') 
+    ecal_dhit_layer  = cppyy.gbl.std.vector('int')
 
-    ecal_layer1_hit_count  = FloatCol()
-    ecal_layer1_energy_sum = FloatCol()
-    ecal_layer1_hit_count_no_rec  = FloatCol()
-    ecal_layer1_energy_sum_no_rec = FloatCol()
-    
+    total_ecal_denergy      = FloatCol(default=0)
 
-    #ecal_dhit_energy        = stl.vector("double")
-    #ecal_dhit_layer         = stl.vector("double")
-    
-    #ecal_hit_energy         = stl.vector("double")
-    #ecal_hit_x              = stl.vector("double")
-    #ecal_hit_y              = stl.vector("double")
-    #ecal_is_recoil_e_hit    = stl.vector('int') 
+    ecal_layer1_hit_count  = FloatCol(default=0)
+    ecal_layer1_energy_sum = FloatCol(default=0)
+
+    trigger_energy_sum = FloatCol(default=0)
     
     recoil_e_ecal_sp_x = FloatCol()
     recoil_e_ecal_sp_y = FloatCol()
@@ -61,12 +59,13 @@ class EcalEvent(TreeModel):
     recoil_e_ecal_sp_py = FloatCol()
     recoil_e_ecal_sp_pz = FloatCol()
 
-    bdt_prob = FloatCol()
-    passes_ecal_veto    = IntCol() 
+    bdt_prob         = FloatCol(default=-9999)
+    passes_ecal_veto = IntCol(default=0) 
 
 class TriggerEvent(TreeModel): 
 
-    triggered = IntCol()
+    triggered = IntCol(default=-1)
+    layer_sum = FloatCol(default=-9999)
 
 class TriggerPadEvent(TreeModel): 
 
@@ -74,11 +73,11 @@ class TriggerPadEvent(TreeModel):
 
 class TrackerEvent(TreeModel):
 
-    recoil_track_count       = IntCol()
-    recoil_loose_track_count = IntCol()
-    recoil_axial_track_count = IntCol()
+    recoil_track_count       = IntCol(default=-9999)
+    recoil_loose_track_count = IntCol(default=-9999)
+    recoil_axial_track_count = IntCol(default=-9999)
 
-    recoil_hits_count  = IntCol()
+    recoil_hits_count  = IntCol(default=-9999)
 
     recoil_hits_count_l1 = IntCol()
     recoil_hits_count_l2 = IntCol()
@@ -140,11 +139,16 @@ class SignalEvent(TreeModel):
 
     ap_mass           = FloatCol()
     
-    recoil_e_truth_p  = FloatCol() 
-    recoil_e_truth_pt = FloatCol() 
-    recoil_e_truth_px = FloatCol() 
-    recoil_e_truth_py = FloatCol() 
-    recoil_e_truth_pz = FloatCol()
+    n_electrons       = IntCol()
+
+    recoil_e_truth_p   = cppyy.gbl.std.vector('double') 
+    recoil_e_truth_pt  = cppyy.gbl.std.vector('double')
+    recoil_e_truth_px  = cppyy.gbl.std.vector('double')
+    recoil_e_truth_py  = cppyy.gbl.std.vector('double')
+    recoil_e_truth_pz  = cppyy.gbl.std.vector('double')
+    recoil_e_vertex_x  = cppyy.gbl.std.vector('double')
+    recoil_e_vertex_y  = cppyy.gbl.std.vector('double') 
+    recoil_e_vertex_z  = cppyy.gbl.std.vector('double')
 
 class PhotoNuclearEvent(TreeModel): 
     
@@ -204,6 +208,8 @@ class ElectroNuclearEvent(TreeModel):
     recoil_e_vy  = FloatCol(default=-9999)
     recoil_e_vz  = FloatCol(default=-9999)
 
+    q2 = FloatCol(default=-9999)
+
     en_weight = FloatCol()
 
     lead_hadron_ke      = FloatCol()
@@ -211,3 +217,9 @@ class ElectroNuclearEvent(TreeModel):
     lead_hadron_theta_z = FloatCol()
 
     highest_w_nucleon_w = FloatCol()
+    
+    is_single_neutron = IntCol(default=-9999)
+    is_dineutron      = IntCol(default=-9999)
+    is_diproton       = IntCol(default=-9999)
+    is_pn             = IntCol(default=-9999)
+    is_ghost          = IntCol(default=0)
