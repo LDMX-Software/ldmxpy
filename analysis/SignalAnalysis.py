@@ -18,7 +18,7 @@ class SignalAnalysis:
         self.tree = Tree('signal_ntuple', model=SignalEvent)
 
     def process(self, event):
-        
+       
         # Get the collection of MC particles from the event
         particles = event.get_collection('SimParticles_sim')
        
@@ -34,13 +34,18 @@ class SignalAnalysis:
             recoil_e_tpt    = math.sqrt(recoil_e_tpvec[0]*recoil_e_tpvec[0] 
                                       + recoil_e_tpvec[1]*recoil_e_tpvec[1])
         
-            self.tree.recoil_e_truth_p[i]  = recoil_e_tp
-            self.tree.recoil_e_truth_pt[i] = recoil_e_tpt
-            self.tree.recoil_e_truth_px[i] = recoil_e_tpvec[0]
-            self.tree.recoil_e_truth_py[i] = recoil_e_tpvec[1]
-            self.tree.recoil_e_truth_pz[i] = recoil_e_tpvec[2]
+            self.tree.recoil_e_truth_p.push_back(recoil_e_tp)
+            self.tree.recoil_e_truth_pt.push_back(recoil_e_tpt)
+            self.tree.recoil_e_truth_px.push_back(recoil_e_tpvec[0])
+            self.tree.recoil_e_truth_py.push_back(recoil_e_tpvec[1])
+            self.tree.recoil_e_truth_pz.push_back(recoil_e_tpvec[2])
+
+            self.tree.recoil_e_vertex_x.push_back(recoil.getVertex()[0])
+            self.tree.recoil_e_vertex_y.push_back(recoil.getVertex()[1])
+            self.tree.recoil_e_vertex_z.push_back(recoil.getVertex()[2])
 
 
+        # Get the A' mass 
         aprime = au.get_ap(particles)
         
         if not aprime:
@@ -48,8 +53,6 @@ class SignalAnalysis:
 
         self.tree.ap_mass =  aprime.getMass()
 
-
-        
         '''
         #
         # Ecal
@@ -82,14 +85,6 @@ class SignalAnalysis:
         max_denergy_cell = 0
         max_layer_hit = 0
         for ecal_dhit in ecal_dhits: 
-
-            # Get the digitized hit energy
-            denergy = ecal_dhit.getEnergy()
-
-            # Currently, if the energy of a digitized hit is below threshold,
-            # its energy is set to zero.  These hits aren't considered.
-            if denergy == 0: continue 
-            ecal_dhit_count += 1
 
             self.tree.ecal_dhit_energy.push_back(denergy)
             denergy_sum += denergy
