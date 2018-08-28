@@ -24,6 +24,8 @@ def main() :
                         help="Configuration file.")
     parser.add_argument("-n", action='store', dest='n_events', 
                         help="Total number of events.")
+    parser.add_argument('-p', action='store', dest='n_print', 
+                         help='Freqency of event number printing.')
     args = parser.parse_args()
 
     if not args.config :
@@ -31,6 +33,9 @@ def main() :
 
     n_events = 0
     if args.n_events: n_events = args.n_events
+
+    n_print = 1000
+    if args.n_print: n_print = int(args.n_print) 
 
     # Parse the configuration file
     config = parse_config(args.config)
@@ -75,9 +80,13 @@ def main() :
             for analysis in analyses_instances:
                 analysis.process(event)
             event_counter += 1
+            
             if event_counter == int(n_events): 
                 print 'Hit event limit'
                 break
+
+            if event_counter%n_print == 0: 
+                print '[ ldmxpy ]: >> Event >> %s >>' % event_counter
 
         print "Total number of events processed: %s" % event_counter
         event.close_file()
