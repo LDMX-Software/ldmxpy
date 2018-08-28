@@ -73,15 +73,16 @@ class EcalAnalysis(object):
             # Get the collection of BDT results from the event.
             ecal_veto_results = event.get_collection('EcalVeto_recon')
 
-            self.tree.vecal_max_denergy_cell = ecal_veto_results[0].getMaxCellDep()
-            self.tree.vtotal_ecal_denergy    = ecal_veto_results[0].getSummedDet()
-            self.tree.vecal_max_layer_hit    = ecal_veto_results[0].getDeepestLayerHit()
-            self.tree.vecal_summed_tight_iso = ecal_veto_results[0].getSummedTightIso()
-            self.tree.vecal_shower_rms = ecal_veto_results[0].getShowerRMS()
-            self.tree.vecal_x_pos_std = ecal_veto_results[0].getXStd()
-            self.tree.vecal_y_pos_std = ecal_veto_results[0].getYStd()
-            self.tree.vecal_layer_std = ecal_veto_results[0].getStdLayerHit()
+            self.tree.vecal_dhit_count        = ecal_veto_results[0].getNReadoutHits()
+            self.tree.vtotal_ecal_denergy     = ecal_veto_results[0].getSummedDet()
+            self.tree.vecal_summed_tight_iso  = ecal_veto_results[0].getSummedTightIso()
+            self.tree.vecal_max_denergy_cell  = ecal_veto_results[0].getMaxCellDep()
+            self.tree.vecal_shower_rms        = ecal_veto_results[0].getShowerRMS()
+            self.tree.vecal_x_pos_std         = ecal_veto_results[0].getXStd()
+            self.tree.vecal_y_pos_std         = ecal_veto_results[0].getYStd()
             self.tree.vaverage_ecal_layer_hit = ecal_veto_results[0].getAvgLayerHit()
+            self.tree.vecal_max_layer_hit     = ecal_veto_results[0].getDeepestLayerHit()
+            self.tree.vecal_layer_std         = ecal_veto_results[0].getStdLayerHit()
  
             # Get the BDT probability.
             self.tree.bdt_prob = ecal_veto_results[0].getDisc()
