@@ -90,6 +90,36 @@ class EcalAnalysis(object):
             # Check if the veto passed.
             if ecal_veto_results[0].passesVeto(): self.tree.passes_ecal_veto =  1
 
+        # Check if the ECal veto collection exist. If it does, use it to get the
+        # BDT result. 
+        if event.collection_exist('MultiElectronVeto_recon'):
+            
+            me_veto_results = event.get_collection('MultiElectronVeto_recon')
+            
+            if me_veto_results[0].cylinder_0_1_layer_0_0.size() != 0: 
+                self.tree.cylinder_0_1_layer_0_0  = me_veto_results[0].cylinder_0_1_layer_0_0[0]
+                self.tree.cylinder_0_1_layer_1_2  = me_veto_results[0].cylinder_0_1_layer_1_2[0]
+                self.tree.cylinder_0_1_layer_3_6  = me_veto_results[0].cylinder_0_1_layer_3_6[0]
+                self.tree.cylinder_0_1_layer_7_14 = me_veto_results[0].cylinder_0_1_layer_7_14[0]
+                self.tree.cylinder_0_1_layer_15   = me_veto_results[0].cylinder_0_1_layer_15[0]
+
+                self.tree.cylinder_1_3_layer_0_0  = me_veto_results[0].cylinder_1_3_layer_0_0[0]
+                self.tree.cylinder_1_3_layer_1_2  = me_veto_results[0].cylinder_1_3_layer_1_2[0]
+                self.tree.cylinder_1_3_layer_3_6  = me_veto_results[0].cylinder_1_3_layer_3_6[0]
+                self.tree.cylinder_1_3_layer_7_14 = me_veto_results[0].cylinder_1_3_layer_7_14[0]
+                self.tree.cylinder_1_3_layer_15   = me_veto_results[0].cylinder_1_3_layer_15[0]
+
+                self.tree.cylinder_3_5_layer_0_0  = me_veto_results[0].cylinder_3_5_layer_0_0[0]
+                self.tree.cylinder_3_5_layer_1_2  = me_veto_results[0].cylinder_3_5_layer_1_2[0]
+                self.tree.cylinder_3_5_layer_3_6  = me_veto_results[0].cylinder_3_5_layer_3_6[0]
+                self.tree.cylinder_3_5_layer_7_14 = me_veto_results[0].cylinder_3_5_layer_7_14[0]
+                self.tree.cylinder_3_5_layer_15   = me_veto_results[0].cylinder_3_5_layer_15[0]
+                
+                self.tree.cylinder_5_layer_0_0  = me_veto_results[0].cylinder_5_layer_0_0[0]
+                self.tree.cylinder_5_layer_1_2  = me_veto_results[0].cylinder_5_layer_1_2[0]
+                self.tree.cylinder_5_layer_3_6  = me_veto_results[0].cylinder_5_layer_3_6[0]
+                self.tree.cylinder_5_layer_7_14 = me_veto_results[0].cylinder_5_layer_7_14[0]
+                self.tree.cylinder_5_layer_15   = me_veto_results[0].cylinder_5_layer_15[0]
         '''
 
         # Get the collection of MC particles from the event

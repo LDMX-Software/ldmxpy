@@ -40,7 +40,31 @@ class EcalEvent(TreeModel):
     vaverage_ecal_layer_hit  = FloatCol(default=-9999)
     vecal_max_layer_hit      = FloatCol(default=-9999)
     vecal_layer_std          = FloatCol(default=-9999)
-   
+
+    cylinder_0_1_layer_0_0   = FloatCol(default=-9999)
+    cylinder_0_1_layer_1_2   = FloatCol(default=-9999)
+    cylinder_0_1_layer_3_6   = FloatCol(default=-9999)
+    cylinder_0_1_layer_7_14  = FloatCol(default=-9999)
+    cylinder_0_1_layer_15    = FloatCol(default=-9999)
+
+    cylinder_1_3_layer_0_0   = FloatCol(default=-9999)
+    cylinder_1_3_layer_1_2   = FloatCol(default=-9999)
+    cylinder_1_3_layer_3_6   = FloatCol(default=-9999)
+    cylinder_1_3_layer_7_14  = FloatCol(default=-9999)
+    cylinder_1_3_layer_15    = FloatCol(default=-9999)
+
+    cylinder_3_5_layer_0_0   = FloatCol(default=-9999)
+    cylinder_3_5_layer_1_2   = FloatCol(default=-9999)
+    cylinder_3_5_layer_3_6   = FloatCol(default=-9999)
+    cylinder_3_5_layer_7_14  = FloatCol(default=-9999)
+    cylinder_3_5_layer_15    = FloatCol(default=-9999)
+
+    cylinder_5_layer_0_0   = FloatCol(default=-9999)
+    cylinder_5_layer_1_2   = FloatCol(default=-9999)
+    cylinder_5_layer_3_6   = FloatCol(default=-9999)
+    cylinder_5_layer_7_14  = FloatCol(default=-9999)
+    cylinder_5_layer_15    = FloatCol(default=-9999)
+
     ecal_dhit_energy = cppyy.gbl.std.vector('double') 
     ecal_dhit_layer  = cppyy.gbl.std.vector('int')
 
