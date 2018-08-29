@@ -2,11 +2,13 @@
 
 import argparse
 import numpy as np
+import ROOT as r
 import root_numpy as rnp
 import sys
 import yaml
 import xgboost as xgb
 
+from rootpy.plotting import Graph, Canvas
 from sklearn import cross_validation
 from sklearn.svm import LinearSVC
 from sklearn import metrics 
@@ -44,6 +46,8 @@ def main():
         print '[ Trainer ] : Signal file is required.'
         sys.exit(0)
     sig = rnp.root2array(config['Signal'], 'ecal_ntuple', branches=config['Features'])
+    sig_trig = rnp.root2array(config['Signal'], 'ecal_ntuple')
+    #sig_trig = rnp.root2array(config['Signal'], 'trigger_ntuple')
 
     # Get the file containing the 'background' and open it.  If a file isn't 
     # specified, warn the user and exit.
@@ -51,8 +55,17 @@ def main():
         print '[ Trainer ] : Background file is required.'
         sys.exit(0)
     bkg = rnp.root2array(config['Background'], 'ecal_ntuple', branches=config['Features'])
-   
+    bkg_trig = rnp.root2array(config['Background'], 'ecal_ntuple')
+    #bkg_trig = rnp.root2array(config['Background'], 'trigger_ntuple')
+
+    #sig = sig[sig_trig['triggered'] == 1]
+    #bkg = bkg[bkg_trig['triggered'] == 1]
+
+    sig = sig[sig_trig['trigger_energy_sum'] < 5650]
+    bkg = bkg[bkg_trig['trigger_energy_sum'] < 5650]
+
     # Determine the number of events to train on.
+    print '[ Trainer ]: Total signal: %s, Total background: %s' % (len(sig), len(bkg)) 
     t_events = min(len(sig), len(bkg))
     print '[ Trainer ] : Using %s events to train.' % t_events
 
@@ -65,14 +78,14 @@ def main():
     X = np.concatenate((sig, bkg))
     y = np.concatenate((y_sig, y_bkg))
 
-    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.25, random_state=0)
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=0.2, random_state=0)
 
     dtrain = xgb.DMatrix(X_train, label=y_train)
     dtest = xgb.DMatrix(X_test, label=y_test)
 
     param = {
         'objective': 'binary:logistic',
-        'eta': 0.2,  # the training step for each iteration
+        'eta': 0.023,  # the training step for each iteration
         'max_depth': 10,  # the maximum depth of each tree
         'min_child_weight': 20,
         'silent': 1,  # logging mode - quiet
@@ -95,6 +108,8 @@ def main():
     roc_auc = metrics.auc(fpr, tpr)
     print 'Final Validation AUC = %s' % (roc_auc)
 
+    csv_arr = np.column_stack((fpr, tpr))
+    np.savetxt('roc_curve_2e_ecal_pn_ap_1mev.csv', csv_arr, delimiter=',')
 
     joblib.dump(bst, 'bst_model.pkl', compress=True)
 
