@@ -29,15 +29,10 @@ class PhotoNuclearAnalysis(object):
         # Get the collection of MC particles from the event.
         particles = event.get_collection('SimParticles_sim')
 
-        # Search the list of sim particles for the recoil electron.  If it isn't
-        # found, throw an exception.
-        #recoil_e = au.get_recoil_electron(particles)
-
         # Search the list of sim particles for the recoil electron. If it isn't 
         # found, throw an exception
         recoils = au.get_recoil_electrons(particles)
         self.tree.n_electrons = len(recoils)
-
         
         # Get the e- recoil truth information
         for i, recoil in enumerate(recoils): 
@@ -49,9 +44,19 @@ class PhotoNuclearAnalysis(object):
         # photonuclear reaction.
         pn_gamma = au.get_pn_gamma(recoils)
 
-        self.tree.pn_particle_mult = pn_gamma.getDaughterCount()
-        self.tree.pn_gamma_energy  = pn_gamma.getEnergy()
-        self.tree.pn_gamma_int_z   = pn_gamma.getEndPoint()[2]
+        pn_gamma_pvec = pn_gamma.getMomentum()
+        recoil_e_calc_pvec = [
+                -1*pn_gamma_pvec[0], -1*pn_gamma_pvec[1], 4000.0 - pn_gamma_pvec[2]]
+
+        self.tree.recoil_e_calc_p  = la.norm(recoil_e_calc_pvec)
+        self.tree.recoil_e_calc_pt = au.get_pt(recoil_e_calc_pvec)
+        self.tree.recoil_e_calc_px = recoil_e_calc_pvec[0]
+        self.tree.recoil_e_calc_py = recoil_e_calc_pvec[1]
+        self.tree.recoil_e_calc_pz = recoil_e_calc_pvec[2]
+
+        self.tree.pn_particle_mult    = pn_gamma.getDaughterCount()
+        self.tree.pn_gamma_energy     = pn_gamma.getEnergy()
+        self.tree.pn_gamma_int_z      = pn_gamma.getEndPoint()[2]
         self.tree.pn_gamma_vertex_z   = pn_gamma.getVertex()[2]
 
         # Get the lead hadron in the event
