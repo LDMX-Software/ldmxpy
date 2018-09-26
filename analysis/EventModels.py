@@ -175,6 +175,12 @@ class SignalEvent(TreeModel):
     recoil_e_vertex_y  = cppyy.gbl.std.vector('double') 
     recoil_e_vertex_z  = cppyy.gbl.std.vector('double')
 
+    recoil_e_sig_p  = FloatCol() 
+    recoil_e_sig_pt = FloatCol() 
+    recoil_e_sig_px = FloatCol() 
+    recoil_e_sig_py = FloatCol() 
+    recoil_e_sig_pz = FloatCol()
+
 class PhotoNuclearEvent(TreeModel): 
     
     pn_particle_mult    = IntCol()

@@ -44,6 +44,14 @@ class SignalAnalysis:
             self.tree.recoil_e_vertex_y.push_back(recoil.getVertex()[1])
             self.tree.recoil_e_vertex_z.push_back(recoil.getVertex()[2])
 
+            if recoil_e_tpt != 0: 
+                
+                self.tree.recoil_e_sig_p  = recoil_e_tp
+                self.tree.recoil_e_sig_pt = recoil_e_tpt
+                self.tree.recoil_e_sig_px = recoil_e_tpvec[0]
+                self.tree.recoil_e_sig_py = recoil_e_tpvec[1]
+                self.tree.recoil_e_sig_pz = recoil_e_tpvec[2]
+
 
         # Get the A' mass 
         aprime = au.get_ap(particles)
