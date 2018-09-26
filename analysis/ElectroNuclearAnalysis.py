@@ -1,4 +1,6 @@
 
+import math
+
 import ROOT as r
 
 from numpy import linalg as la
@@ -34,10 +36,20 @@ class ElectroNuclearAnalysis(object):
         # found, throw an exception
         recoil_e = au.get_recoil_electron(particles)
 
+        # Persist the electron vertex
         self.tree.recoil_e_vx = recoil_e.getVertex()[0]
         self.tree.recoil_e_vy = recoil_e.getVertex()[1]
         self.tree.recoil_e_vz = recoil_e.getVertex()[2]
+      
+        # Get the momentum of the recoil electron.
+        self.tree.recoil_e_tp = la.norm(recoil_e.getMomentum())
+
+        # Calculate the q2 (beam energy - recoil energy)
+        self.tree.q2 = (4000.0 - la.norm(recoil_e.getMomentum()))
         
+        
+
+        '''
         # Get all of the tracker hits in the event
         recoil_hits = event.get_collection('SiStripHits_recon')
 
@@ -113,10 +125,25 @@ class ElectroNuclearAnalysis(object):
             self.tree.single_trk_p = p_find
         
         # Get the lead hadron in the event
-        hadron = self.get_lead_hadron(en_daughters)
-        self.tree.lead_hadron_ke = au.get_kinetic_energy(hadron)
-        self.tree.lead_hadron_pdg_id = hadron.getPdgID()
-        self.tree.lead_hadron_theta_z = au.get_theta_z(hadron) 
+        lead_hadron, lead_proton, lead_neutron, lead_pion = self.get_lead_hadrons(en_daughters)
+        self.tree.lead_hadron_ke = au.get_kinetic_energy(lead_hadron)
+        self.tree.lead_hadron_pdg_id = lead_hadron.getPdgID()
+        self.tree.lead_hadron_theta_z = au.get_theta_z(lead_hadron) 
+
+        # Determine if an event can be classified as a single neutron event   
+        fneutron_count, fproton_count = self.hard_forward_hadron_count(en_daughters)
+        if fneutron_count == 1: 
+            self.tree.is_single_neutron = 1
+        elif fneutron_count == 2: 
+            self.tree.is_dineutron = 1
+        elif fproton_count == 2: 
+            self.tree.is_diproton = 1
+        elif (fneutron_count == 1) & (fproton_count == 1): 
+            self.tree.is_pn = 1
+
+        # Check if the event is unphysical
+        if self.is_ghost_event(lead_hadron): self.tree.is_ghost = 1
+        '''
 
         self.tree.fill(reset=True)
     
@@ -126,19 +153,68 @@ class ElectroNuclearAnalysis(object):
 
     def calculate_weight(self, w): 
         return self.lfit.Eval(w)/self.hfit.Eval(w)
-    
-    def get_lead_hadron(self, daughters): 
+   
+    def get_lead_hadrons(self, en_daughters): 
 
-        lead_ke = -9999
-        lead_proton = -9999
-        lead_neutron = -9999
-        lead_pion = -9999
-        lead_hadron = None
-        for pn_daughter in daughters: 
+        lead_ke         = -9999
+        lead_proton_ke  = -9999
+        lead_neutron_ke = -9999
+        lead_pion_ke    = -9999
+
+        lead_hadron  = None
+        lead_proton  = None
+        lead_neutron = None
+        lead_pion    = None
+        
+        for en_daughter in en_daughters: 
             
-            ke = au.get_kinetic_energy(pn_daughter) 
+            ke = au.get_kinetic_energy(en_daughter) 
             if lead_ke < ke: 
                 lead_ke = ke
-                lead_hadron = pn_daughter
+                lead_hadron = en_daughter
 
-        return lead_hadron
+            if en_daughter.getPdgID() == 2112: 
+                if lead_neutron_ke < ke: 
+                    lead_neutron_ke = ke
+                    lead_neutron = en_daughter
+            
+            if en_daughter.getPdgID() == 2212: 
+                if lead_proton_ke < ke: 
+                    lead_proton_ke = ke
+                    lead_proton = en_daughter
+            
+            if (abs(en_daughter.getPdgID()) == 211) or (en_daughter.getPdgID() == 111):
+                if lead_pion_ke < ke: 
+                    lead_pion_ke = ke
+                    lead_pion = en_daughter
+
+        return lead_hadron, lead_proton, lead_neutron, lead_pion
+
+    def is_ghost_event(self, lead_hadron): 
+        
+        ke = au.get_kinetic_energy(lead_hadron)
+        theta_z = au.get_theta_z(lead_hadron)
+
+        theta_z_theo = math.exp(-0.000575249*ke + 5.3643)
+        
+        #print 'KE: %s, Theta: %s, Theta (exp): %s' % (ke, theta_z, theta_z_theo)
+        
+        if theta_z > theta_z_theo: return 1
+        else: return 0
+
+    def hard_forward_hadron_count(self, daughters): 
+
+        fneutron_count = 0
+        fproton_count = 0
+
+        for en_daughter in daughters: 
+
+            ke = au.get_kinetic_energy(en_daughter)
+            theta_z = au.get_theta_z(en_daughter)
+            if ke > 100 and theta_z < 90:
+                if en_daughter.getPdgID() == 2112: 
+                    fneutron_count += 1
+                elif en_daughter.getPdgID() == 2212: 
+                    fproton_count += 1
+        
+        return fneutron_count, fproton_count

@@ -181,7 +181,13 @@ class PhotoNuclearEvent(TreeModel):
     pn_gamma_energy     = FloatCol()
     pn_gamma_vertex_z   = FloatCol()
     pn_gamma_int_z      = FloatCol()
-    
+
+    recoil_e_calc_p  = FloatCol() 
+    recoil_e_calc_pt = FloatCol() 
+    recoil_e_calc_px = FloatCol() 
+    recoil_e_calc_py = FloatCol() 
+    recoil_e_calc_pz = FloatCol()
+
     recoil_e_truth_p  = FloatCol() 
     recoil_e_truth_pt = FloatCol() 
     recoil_e_truth_px = FloatCol() 
