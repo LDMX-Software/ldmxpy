@@ -46,7 +46,7 @@ def main():
         print '[ Trainer ] : Signal file is required.'
         sys.exit(0)
     sig = rnp.root2array(config['Signal'], 'ecal_ntuple', branches=config['Features'])
-    sig_trig = rnp.root2array(config['Signal'], 'ecal_ntuple', ['trigger_energy_sum'])
+    sig_ecal = rnp.root2array(config['Signal'], 'ecal_ntuple')
     sig_ntuple = rnp.root2array(config['Signal'], 'signal_ntuple')
 
     # Get the file containing the 'background' and open it.  If a file isn't 
@@ -56,16 +56,18 @@ def main():
         sys.exit(0)
 
     bkg = rnp.root2array(config['Background'], 'ecal_ntuple', branches=config['Features'])
-    bkg_trig = rnp.root2array(config['Background'], 'ecal_ntuple', ['trigger_energy_sum'])
+    bkg_ecal = rnp.root2array(config['Background'], 'ecal_ntuple')
     bkg_ntuple = rnp.root2array(config['Background'], 'pn_ntuple')
 
     if 'TriggerCut' not in config: 
         print '[ Trainer ]: An energy sum value is required by the trigger.'
         sys.exit(0)
-    sig = sig[sig_trig['trigger_energy_sum'] < float(config['TriggerCut'][0])]
-    bkg = bkg[bkg_trig['trigger_energy_sum'] < float(config['TriggerCut'][0])]
-    sig_ntuple = sig_ntuple[sig_trig['trigger_energy_sum'] < float(config['TriggerCut'][0])]
-    bkg_ntuple = bkg_ntuple[bkg_trig['trigger_energy_sum'] < float(config['TriggerCut'][0])]
+    sig = sig[sig_ecal['trigger_energy_sum'] < float(config['TriggerCut'][0])]
+    bkg = bkg[bkg_ecal['trigger_energy_sum'] < float(config['TriggerCut'][0])]
+    sig_ntuple = sig_ntuple[sig_ecal['trigger_energy_sum'] < float(config['TriggerCut'][0])]
+    bkg_ntuple = bkg_ntuple[bkg_ecal['trigger_energy_sum'] < float(config['TriggerCut'][0])]
+    sig_ecal = sig_ecal[sig_ecal['trigger_energy_sum'] < float(config['TriggerCut'][0])]
+    bkg_ecal = bkg_ecal[bkg_ecal['trigger_energy_sum'] < float(config['TriggerCut'][0])]
 
     # Determine the number of events to train on.
     print '[ Trainer ]: Total signal: %s, Total background: %s' % (len(sig), len(bkg)) 
@@ -140,6 +142,9 @@ def main():
     sig_ntuple = sig_ntuple[:t_events]
     bkg_ntuple = bkg_ntuple[:t_events]
 
+    sig_ecal = sig_ecal[:t_events]
+    bkg_ecal = bkg_ecal[:t_events]
+
     sig_sel = []
     bkg_sel = []
     sig_pred = []
@@ -163,10 +168,16 @@ def main():
     sig_ntuple = sig_ntuple[np.array(sig_sel)]
     bkg_ntuple = bkg_ntuple[np.array(bkg_sel)]
 
-    rnp.array2root(sig_ntuple, 'sig_test_ntuple.root', treename='signal_ntuple', mode='recreate')
-    rnp.array2root(sig_pred, 'sig_test_preds.root', treename='signal_pred', mode='recreate')
-    rnp.array2root(bkg_ntuple, 'bkg_test_ntuple.root', treename='pn_ntuple', mode='recreate')
-    rnp.array2root(bkg_pred, 'bkg_test_preds.root', treename='pn_pred', mode='recreate')
+    sig_ecal = sig_ecal[np.array(sig_sel)]
+    bkg_ecal = bkg_ecal[np.array(bkg_sel)]
+
+    output_fn = config['Output_FileName'][0]
+    rnp.array2root(sig_ntuple, 'sig_%s' % output_fn,       treename='signal_ntuple', mode='recreate')
+    rnp.array2root(sig_ecal,   'sig_ecal_%s' % output_fn,  treename='ecal_ntuple',   mode='recreate')
+    rnp.array2root(sig_pred,   'sig_preds_%s' % output_fn, treename='signal_pred',   mode='recreate')
+    rnp.array2root(bkg_ntuple, 'bkg_%s' % output_fn,       treename='pn_ntuple',     mode='recreate')
+    rnp.array2root(bkg_ecal,   'bkg_ecal_%s' % output_fn,  treename='ecal_ntuple',   mode='recreate')
+    rnp.array2root(bkg_pred,   'bkg_preds_%s' % output_fn, treename='pn_pred',       mode='recreate')
 
 
 if __name__ == "__main__":
