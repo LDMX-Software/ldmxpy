@@ -94,32 +94,36 @@ class EcalAnalysis(object):
         # BDT result. 
         if event.collection_exist('MultiElectronVeto_recon'):
             
+            print "Here"
+
             me_veto_results = event.get_collection('MultiElectronVeto_recon')
             
-            if me_veto_results[0].cylinder_0_1_layer_0_0.size() != 0: 
-                self.tree.cylinder_0_1_layer_0_0  = me_veto_results[0].cylinder_0_1_layer_0_0[0]
-                self.tree.cylinder_0_1_layer_1_2  = me_veto_results[0].cylinder_0_1_layer_1_2[0]
-                self.tree.cylinder_0_1_layer_3_6  = me_veto_results[0].cylinder_0_1_layer_3_6[0]
-                self.tree.cylinder_0_1_layer_7_14 = me_veto_results[0].cylinder_0_1_layer_7_14[0]
-                self.tree.cylinder_0_1_layer_15   = me_veto_results[0].cylinder_0_1_layer_15[0]
+            if me_veto_results[0].cylinder_0_1_layer_0_0.size() != 0:
+                for i in xrange(0, me_veto_results[0].cylinder_0_1_layer_0_0.size()):
+                    print me_veto_results[0].cylinder_0_1_layer_0_0[i]
+                    setattr(self.tree, "cyl%s_0_1_layer_0_0"  % i, me_veto_results[0].cylinder_0_1_layer_0_0[i])
+                    setattr(self.tree, "cyl%s_0_1_layer_1_2"  % i, me_veto_results[0].cylinder_0_1_layer_1_2[i])
+                    setattr(self.tree, "cyl%s_0_1_layer_3_6"  % i, me_veto_results[0].cylinder_0_1_layer_3_6[i])
+                    setattr(self.tree, "cyl%s_0_1_layer_7_14" % i, me_veto_results[0].cylinder_0_1_layer_7_14[i])
+                    setattr(self.tree, "cyl%s_0_1_layer_15"   % i, me_veto_results[0].cylinder_0_1_layer_15[i])
 
-                self.tree.cylinder_1_3_layer_0_0  = me_veto_results[0].cylinder_1_3_layer_0_0[0]
-                self.tree.cylinder_1_3_layer_1_2  = me_veto_results[0].cylinder_1_3_layer_1_2[0]
-                self.tree.cylinder_1_3_layer_3_6  = me_veto_results[0].cylinder_1_3_layer_3_6[0]
-                self.tree.cylinder_1_3_layer_7_14 = me_veto_results[0].cylinder_1_3_layer_7_14[0]
-                self.tree.cylinder_1_3_layer_15   = me_veto_results[0].cylinder_1_3_layer_15[0]
+                    setattr(self.tree, "cyl%s_1_3_layer_0_0"  % i, me_veto_results[0].cylinder_1_3_layer_0_0[i])
+                    setattr(self.tree, "cyl%s_1_3_layer_1_2"  % i, me_veto_results[0].cylinder_1_3_layer_1_2[i])
+                    setattr(self.tree, "cyl%s_1_3_layer_3_6"  % i, me_veto_results[0].cylinder_1_3_layer_3_6[i])
+                    setattr(self.tree, "cyl%s_1_3_layer_7_14" % i, me_veto_results[0].cylinder_1_3_layer_7_14[i])
+                    setattr(self.tree, "cyl%s_1_3_layer_15"   % i, me_veto_results[0].cylinder_1_3_layer_15[i])
 
-                self.tree.cylinder_3_5_layer_0_0  = me_veto_results[0].cylinder_3_5_layer_0_0[0]
-                self.tree.cylinder_3_5_layer_1_2  = me_veto_results[0].cylinder_3_5_layer_1_2[0]
-                self.tree.cylinder_3_5_layer_3_6  = me_veto_results[0].cylinder_3_5_layer_3_6[0]
-                self.tree.cylinder_3_5_layer_7_14 = me_veto_results[0].cylinder_3_5_layer_7_14[0]
-                self.tree.cylinder_3_5_layer_15   = me_veto_results[0].cylinder_3_5_layer_15[0]
+                    setattr(self.tree, "cyl%s_3_5_layer_0_0"  % i, me_veto_results[0].cylinder_3_5_layer_0_0[i])
+                    setattr(self.tree, "cyl%s_3_5_layer_1_2"  % i, me_veto_results[0].cylinder_3_5_layer_1_2[i])
+                    setattr(self.tree, "cyl%s_3_5_layer_3_6"  % i, me_veto_results[0].cylinder_3_5_layer_3_6[i])
+                    setattr(self.tree, "cyl%s_3_5_layer_7_14" % i, me_veto_results[0].cylinder_3_5_layer_7_14[i])
+                    setattr(self.tree, "cyl%s_3_5_layer_15"   % i, me_veto_results[0].cylinder_3_5_layer_15[i])
                 
-                self.tree.cylinder_5_layer_0_0  = me_veto_results[0].cylinder_5_layer_0_0[0]
-                self.tree.cylinder_5_layer_1_2  = me_veto_results[0].cylinder_5_layer_1_2[0]
-                self.tree.cylinder_5_layer_3_6  = me_veto_results[0].cylinder_5_layer_3_6[0]
-                self.tree.cylinder_5_layer_7_14 = me_veto_results[0].cylinder_5_layer_7_14[0]
-                self.tree.cylinder_5_layer_15   = me_veto_results[0].cylinder_5_layer_15[0]
+                    setattr(self.tree, "cyl%s_5_layer_0_0"  % i, me_veto_results[0].cylinder_5_layer_0_0[i])
+                    setattr(self.tree, "cyl%s_5_layer_1_2"  % i, me_veto_results[0].cylinder_5_layer_1_2[i])
+                    setattr(self.tree, "cyl%s_5_layer_3_6"  % i, me_veto_results[0].cylinder_5_layer_3_6[i])
+                    setattr(self.tree, "cyl%s_5_layer_7_14" % i, me_veto_results[0].cylinder_5_layer_7_14[i])
+                    setattr(self.tree, "cyl%s_5_layer_15"   % i, me_veto_results[0].cylinder_5_layer_15[i])
         '''
 
         # Get the collection of MC particles from the event
