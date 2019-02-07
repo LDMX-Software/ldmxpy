@@ -11,7 +11,7 @@ In `scripts` are python scripts to make a lot of plots
 
 ## Useful links
 
-[uproot][https://github.com/scikit-hep/uproot]
+[uproot](https://github.com/scikit-hep/uproot)
 
-[awkward-array][https://github.com/scikit-hep/awkward-array]
+[awkward-array](https://github.com/scikit-hep/awkward-array)
 
