@@ -62,8 +62,12 @@ def main() :
 
     ofile = root_open(ofile_path, 'recreate')
     
+    params = {}
+    if 'Parameters' in config: 
+        params = config['Parameters']
+
     for analyses in analyses_instances : 
-        analyses.initialize()
+        analyses.initialize(params)
    
     tree_name = 'LDMX_Events'
     if 'TreeName' in config: 
