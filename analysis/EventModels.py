@@ -125,11 +125,32 @@ class TriggerPadEvent(TreeModel):
 
 class TrackerEvent(TreeModel):
 
+    primary_pdg_id = IntCol(default=-9999)
+    primary_p      = FloatCol(default=-9999)
+    primary_theta  = FloatCol(default=-9999)
+    primary_phi    = FloatCol(default=-9999)
+    primary_findable = IntCol(default=0)
+
     recoil_track_count       = IntCol(default=-9999)
     recoil_loose_track_count = IntCol(default=-9999)
     recoil_axial_track_count = IntCol(default=-9999)
 
+    rfindable_trk_pdg_id = cppyy.gbl.std.vector('double')
+    rfindable_trk_id     = cppyy.gbl.std.vector('double')
+    rfindable_trk_p      = cppyy.gbl.std.vector('double')
+    rfindable_trk_theta  = cppyy.gbl.std.vector('double')
+    rfindable_trk_phi    = cppyy.gbl.std.vector('double')
+
+    # Total number of recoil hits
     recoil_hits_count  = IntCol(default=-9999)
+    
+    # Recoil tracker hit level information
+    rhit_x      = cppyy.gbl.std.vector('double') 
+    rhit_y      = cppyy.gbl.std.vector('double') 
+    rhit_z      = cppyy.gbl.std.vector('double')
+    rhit_pdg_id = cppyy.gbl.std.vector('double')
+    rhit_trk_id = cppyy.gbl.std.vector('double')
+    rhit_layer  = cppyy.gbl.std.vector('double')
 
     recoil_hits_count_l1 = IntCol()
     recoil_hits_count_l2 = IntCol()
@@ -262,30 +283,44 @@ class ElectroNuclearEvent(TreeModel):
     en_particle_mult = IntCol()
     en_reaction_z    = FloatCol()
 
-    single_trk_p   = FloatCol()
-    single_trk_pdg = IntCol()
+    # Recoil electron momentum
+    recoil_e_p      = FloatCol(default=-9999) 
+    recoil_e_pt     = FloatCol(default=-9999) 
+    recoil_e_px     = FloatCol(default=-9999) 
+    recoil_e_py     = FloatCol(default=-9999) 
+    recoil_e_pz     = FloatCol(default=-9999)
+    recoil_e_vx     = FloatCol(default=-9999) # Recoil vertex x 
+    recoil_e_vy     = FloatCol(default=-9999) # Recoil vertex y
+    recoil_e_vz     = FloatCol(default=-9999) # Recoil vertex z
+    recoil_e_energy = FloatCol(default=-9999) # Recoil energy
+    recoil_e_theta  = FloatCol(default=-9999)
 
-    recoil_e_tp  = FloatCol(default=-9999) 
-    recoil_e_tpt = FloatCol(default=-9999) 
-    recoil_e_tpx = FloatCol(default=-9999) 
-    recoil_e_tpy = FloatCol(default=-9999) 
-    recoil_e_tpz = FloatCol(default=-9999)
-    recoil_e_vx  = FloatCol(default=-9999)
-    recoil_e_vy  = FloatCol(default=-9999)
-    recoil_e_vz  = FloatCol(default=-9999)
-
+    q = FloatCol(default=-9999) # Momentum transfer
     q2 = FloatCol(default=-9999)
+    omega = FloatCol(default=-9999) # Energy transfer
 
-    en_weight = FloatCol()
+    event_weight = FloatCol(default=-9999) # Event weight
 
-    lead_hadron_ke      = FloatCol()
-    lead_hadron_pdg_id  = FloatCol()
-    lead_hadron_theta_z = FloatCol()
+    # Lead hadron kinetic energy, PDG ID and polar angle
+    lead_hadron_ke      = FloatCol(default=-9999)
+    lead_hadron_pdg_id  = FloatCol(default=-9999)
+    lead_hadron_theta   = FloatCol(default=-9999)
+    lead_p_ke           = FloatCol(default=-9999)
+    lead_p_theta        = FloatCol(default=-9999)
+    lead_n_ke           = FloatCol(default=-9999)
+    lead_n_theta        = FloatCol(default=-9999)
+    lead_pi_ke          = FloatCol(default=-9999)
+    lead_pi_theta       = FloatCol(default=-9999)
+    lead_pi0_ke         = FloatCol(default=-9999)
+    lead_pi0_theta      = FloatCol(default=-9999)
 
-    highest_w_nucleon_w = FloatCol()
-    
-    is_single_neutron = IntCol(default=-9999)
-    is_dineutron      = IntCol(default=-9999)
-    is_diproton       = IntCol(default=-9999)
-    is_pn             = IntCol(default=-9999)
-    is_ghost          = IntCol(default=0)
+    # Theta, eta and weight for all hadrons produced in the EN reaction
+    hadron_ke = cppyy.gbl.std.vector('double')
+    hadron_theta = cppyy.gbl.std.vector('double')
+    hadron_eta = cppyy.gbl.std.vector('double')
+    hadron_weight = cppyy.gbl.std.vector('double')
+    hadron_omega = cppyy.gbl.std.vector('double')
+    hadron_recoil_pt = cppyy.gbl.std.vector('double')
+    hadron_q = cppyy.gbl.std.vector('double')
+    hadron_ew = cppyy.gbl.std.vector('double')
+    hadron_pdgid = cppyy.gbl.std.vector('double')
