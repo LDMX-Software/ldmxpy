@@ -94,7 +94,7 @@ def classify_event(particles, threshold):
         elif pdgid == 211: pion_count += 1
         elif pdgid == 111: pi0_count += 1
         else: 
-            print pdgid
+            #print pdgid
             exotic_count += 1
 
     count = neutron_count + proton_count + pion_count + pi0_count + exotic_count
