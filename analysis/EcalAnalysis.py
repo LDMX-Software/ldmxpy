@@ -14,7 +14,7 @@ class EcalAnalysis(object):
     def __init__(self): 
         self.tree = None
     
-    def initialize(self):
+    def initialize(self, params):
 
         self.tree = Tree('ecal_ntuple', model=EcalEvent)
 
