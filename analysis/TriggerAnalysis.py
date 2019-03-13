@@ -8,7 +8,7 @@ class TriggerAnalysis(object):
     def __init__(self): 
         self.tree = None
 
-    def initialize(self): 
+    def initialize(self, params): 
         self.tree = Tree('trigger_ntuple', model=TriggerEvent)
 
     def process(self, event): 
