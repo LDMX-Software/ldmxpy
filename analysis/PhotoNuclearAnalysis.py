@@ -168,7 +168,6 @@ class PhotoNuclearAnalysis(object):
         self.tree.lead_pi0_theta     = var['h_pi0_theta']
 
         event_type = au.classify_event(pn_particles, 200)
-        print event_type
         self.tree.event_type = event_type
 
         self.tree.fill(reset=True)
