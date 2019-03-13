@@ -1,5 +1,6 @@
 
 import AnalysisUtils as au
+import ROOT as r
 
 from numpy import linalg as la
 from rootpy.tree import Tree
@@ -11,27 +12,63 @@ class TrackerAnalysis(object):
     def __init__(self): 
         self.tree = None
 
-    def initialize(self): 
+    def initialize(self, params): 
         self.tree = Tree('tracker_ntuple', model=TrackerEvent)
 
     def process(self, event): 
+
+        # Get the collection of MC particles from the event.
+        particles = event.get_collection('SimParticles_sim')
+
+        primary = [p for p in particles if p.getGenStatus() == 1][0]
+
+        pvec = primary.getMomentum()
+        vec = r.TVector3(pvec[0], pvec[1], pvec[2])
+        
+        self.tree.primary_pdg_id = primary.getPdgID()
+        self.tree.primary_p = vec.Mag()
+        self.tree.primary_theta = vec.Theta()
+        self.tree.primary_phi = vec.Phi()
+
+        # Get recoil tracker hits from the event.
+        recoil_hits = event.get_collection('RecoilSimHits_sim')
+        self.tree.recoil_hits_count = recoil_hits.GetEntriesFast()
+
+        for hit in recoil_hits: 
+            self.tree.rhit_x.push_back(hit.getPosition()[0])
+            self.tree.rhit_y.push_back(hit.getPosition()[1])
+            self.tree.rhit_z.push_back(hit.getPosition()[2])
+            #self.tree.rhit_pdg_id.push_back(hit.getPdgID())
+            #self.tree.rhit_trk_id.push_back(hit.getTrackID())
 
         # Get the FindableTracks collection from the event
         if event.collection_exist('FindableTracks_recon'):
             findable_tracks = event.get_collection('FindableTracks_recon')
             findable_dic, loose_dic, axial_dic = au.get_findable_tracks_map(findable_tracks)
         
-            findable_particles = findable_dic.keys()
-
             self.tree.recoil_track_count        = len(findable_dic)
             self.tree.recoil_loose_track_count  = len(loose_dic)
             self.tree.recoil_axial_track_count  = len(axial_dic)
 
+            fparticles = findable_dic.keys()
+            for particle in fparticles: 
+           
+                if particle == primary: self.tree.primary_findable = 1
+
+                self.tree.rfindable_trk_pdg_id.push_back(particle.getPdgID())
+                #self.tree.rfindable_trk_id.push_back(particle.getTrackID())
+            
+                pvec = particle.getMomentum()
+                vec = r.TVector3(pvec[0], pvec[1], pvec[2])
+                
+                self.tree.rfindable_trk_p.push_back(vec.Mag())
+                self.tree.rfindable_trk_theta.push_back(vec.Theta())
+                self.tree.rfindable_trk_phi.push_back(vec.Phi())
+
         #
         # Hit Level
         #
-        recoil_hits = event.get_collection('RecoilSimHits_sim')
-        self.tree.recoil_hits_count = recoil_hits.GetEntriesFast()
+        '''
          
         hit_counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         charge_counter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -65,7 +102,7 @@ class TrackerAnalysis(object):
         for layer_n in xrange(0, len(hit_counter)):
             setattr(self.tree, 'tagger_hits_count_l%s' % (layer_n + 1), hit_counter[layer_n])
             setattr(self.tree, 'tagger_charge_total_l%s' % (layer_n + 1), charge_counter[layer_n])
-
+        '''
         '''
         target_sp_hits = event.get_collection('TargetScoringPlaneHits_sim')
 
