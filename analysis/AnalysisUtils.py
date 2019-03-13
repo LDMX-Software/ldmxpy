@@ -5,30 +5,11 @@ from numpy import linalg as la
 def get_kinetic_energy(particle): 
     return (particle.getEnergy() - particle.getMass())
 
-def get_theta_z(particle): 
-    pvec = particle.getMomentum()
-    p = la.norm(pvec)
-    return math.acos(pvec[2]/p)*(180/math.pi)
-
 def get_recoil_electrons(particles): 
 
     # Loop through all of the particles and search for the recoil electron i.e.
     # an electron which doesn't have any parents
-    recoils = []
-    for particle in particles:
-            
-        # If the particle is an electron and has no parents, a recoil
-        # has been found
-        if (particle.getPdgID()) & (particle.getParentCount() == 0):
-            recoils.append(particle)
-            #recoil_e = particle
-            #break
-
-    # All events should contain a recoil electron
-    if len(recoils) == 0: 
-        raise RuntimeError('Recoil electron was not found!')
-
-    return recoils
+    return [particle for particle in particles if ((particle.getPdgID() == 11) & (particle.getGenStatus() == 1))]
 
 def get_pn_gamma(recoils): 
     
@@ -97,5 +78,64 @@ def get_findable_tracks_map(findable_tracks):
 
     return findable_dic, loose_dic, axial_dic
 
-def get_pt(p): 
-    return math.sqrt(p[0]*p[0] + p[1]*p[1])
+def classify_event(particles, threshold): 
+    
+    neutron_count = 0
+    proton_count = 0
+    pion_count = 0
+    pi0_count = 0
+    exotic_count = 0
+    for particle in particles: 
+        if get_kinetic_energy(particle) <= threshold: continue
+
+        pdgid = abs(particle.getPdgID())
+        if pdgid == 2112: neutron_count += 1
+        elif pdgid == 2212: proton_count += 1
+        elif pdgid == 211: pion_count += 1
+        elif pdgid == 111: pi0_count += 1
+        else: 
+            print pdgid
+            exotic_count += 1
+
+    count = neutron_count + proton_count + pion_count + pi0_count + exotic_count
+    count_a = proton_count + pion_count + pi0_count + exotic_count
+    count_b = pion_count + pi0_count + exotic_count
+    count_c = proton_count + neutron_count + pi0_count + exotic_count
+    count_d = neutron_count + pi0_count + exotic_count
+    count_e = proton_count + pi0_count + exotic_count
+    count_f = neutron_count + proton_count + pion_count + exotic_count
+    count_g = neutron_count + pion_count + pi0_count + exotic_count
+    count_h = neutron_count + proton_count + pion_count + pi0_count
+    if count == 0: return 0
+    if neutron_count == 1: 
+            if (count_a == 0): return 2
+            elif (proton_count == 1) & (count_b == 0): return 9
+    if (neutron_count == 2) & (count_a == 0): return 2
+    if (neutron_count >= 3) & (count_a == 0): return 3
+    if (pion_count == 1):
+            if count_c == 0: return 4
+            elif (proton_count == 1) & (count_d == 0): return 7   
+            elif (neutron_count == 1) & (count_e == 0): return 7   
+    if (pion_count == 2) & (count_c == 0): return 5
+    if (pi0_count == 1) & (count_f == 0): return 6
+    if (proton_count == 1) & (count_g == 0): return 8 
+    if (proton_count == 2) & (count_g == 0): return 9
+    if (exotic_count > 0) & (count_h == 0): return 10
+
+    if ((neutron_count > 0) 
+        & ((proton_count > 0) or (pion_count > 0) 
+            or (pi0_count > 0) or (exotic_count > 0))): return 11
+    elif ((proton_count > 0) 
+        & ((neutron_count > 0) or (pion_count > 0) 
+            or (pi0_count > 0) or (exotic_count > 0))): return 11
+    elif ((pion_count > 0) 
+        & ((neutron_count > 0) or (proton_count > 0) 
+            or (pi0_count > 0) or (exotic_count > 0))): return 11
+    elif ((pi0_count > 0) 
+        & ((neutron_count > 0) or (proton_count > 0) 
+            or (pion_count > 0) or (exotic_count > 0))): return 11
+    elif ((exotic_count > 0) 
+        & ((neutron_count > 0) or (proton_count > 0) 
+            or (pion_count > 0) or (pi0_count > 0))): return 11
+
+    return -9999

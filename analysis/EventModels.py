@@ -236,47 +236,47 @@ class PhotoNuclearEvent(TreeModel):
     pn_gamma_vertex_z   = FloatCol()
     pn_gamma_int_z      = FloatCol()
 
-    recoil_e_calc_p  = FloatCol() 
-    recoil_e_calc_pt = FloatCol() 
-    recoil_e_calc_px = FloatCol() 
-    recoil_e_calc_py = FloatCol() 
-    recoil_e_calc_pz = FloatCol()
+    # Recoil electron momentum
+    recoil_e_p      = FloatCol(default=-9999) 
+    recoil_e_pt     = FloatCol(default=-9999) 
+    recoil_e_px     = FloatCol(default=-9999) 
+    recoil_e_py     = FloatCol(default=-9999) 
+    recoil_e_pz     = FloatCol(default=-9999)
+    recoil_e_vx     = FloatCol(default=-9999) # Recoil vertex x 
+    recoil_e_vy     = FloatCol(default=-9999) # Recoil vertex y
+    recoil_e_vz     = FloatCol(default=-9999) # Recoil vertex z
+    recoil_e_energy = FloatCol(default=-9999) # Recoil energy
+    recoil_e_theta  = FloatCol(default=-9999)
 
-    recoil_e_truth_p  = FloatCol() 
-    recoil_e_truth_pt = FloatCol() 
-    recoil_e_truth_px = FloatCol() 
-    recoil_e_truth_py = FloatCol() 
-    recoil_e_truth_pz = FloatCol()
-    recoil_e_vertex_x  = cppyy.gbl.std.vector('double')
-    recoil_e_vertex_y  = cppyy.gbl.std.vector('double') 
-    recoil_e_vertex_z  = cppyy.gbl.std.vector('double')
+    q = FloatCol(default=-9999) # Momentum transfer
+    omega = FloatCol(default=-9999) # Energy transfer
 
-    pn_weight = FloatCol()
+    # Theta, eta and weight for all hadrons produced in the EN reaction
+    hadron_ke = cppyy.gbl.std.vector('double')
+    hadron_theta = cppyy.gbl.std.vector('double')
+    hadron_omega = cppyy.gbl.std.vector('double')
+    hadron_recoil_pt = cppyy.gbl.std.vector('double')
+    hadron_q = cppyy.gbl.std.vector('double')
+    hadron_pdgid = cppyy.gbl.std.vector('double')
 
-    lead_hadron_ke       = FloatCol()
-    lead_hadron_pdg_id   = FloatCol()
-    lead_hadron_theta_z  = FloatCol()
 
-    lead_proton_ke       = FloatCol(default=-9999)
-    lead_proton_theta_z  = FloatCol(default=-9999)
+    lead_hadron_ke       = FloatCol(default=-9999)
+    lead_hadron_pdg_id   = FloatCol(default=-9999)
+    lead_hadron_theta    = FloatCol(default=-9999)
 
-    lead_neutron_ke      = FloatCol(default=-9999)
-    lead_neutron_theta_z = FloatCol(default=-9999)
+    lead_p_ke       = FloatCol(default=-9999)
+    lead_p_theta    = FloatCol(default=-9999)
 
-    lead_pion_ke         = FloatCol(default=-9999)
-    lead_pion_theta_z    = FloatCol(default=-9999)
-    
-    single_trk_p   = FloatCol()
-    single_trk_pt  = FloatCol()
-    single_trk_pdg = IntCol()
+    lead_n_ke      = FloatCol(default=-9999)
+    lead_n_theta   = FloatCol(default=-9999)
 
-    is_single_neutron = IntCol(default=-9999)
-    is_dineutron      = IntCol(default=-9999)
-    is_diproton       = IntCol(default=-9999)
-    is_pn             = IntCol(default=-9999)
-    is_ghost          = IntCol(default=0)
+    lead_pi_ke         = FloatCol(default=-9999)
+    lead_pi_theta      = FloatCol(default=-9999)
 
-    n_electrons       = IntCol(default=0)
+    lead_pi0_ke         = FloatCol(default=-9999)
+    lead_pi0_theta      = FloatCol(default=-9999)
+
+    event_type = IntCol(default=-9999)
 
 class ElectroNuclearEvent(TreeModel): 
     
