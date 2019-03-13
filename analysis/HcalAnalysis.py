@@ -8,7 +8,7 @@ class HcalAnalysis(object):
     def __init__(self): 
         self.tree = None
 
-    def initialize(self): 
+    def initialize(self, params): 
         self.tree = Tree('hcal_ntuple', model=HcalEvent)
         self.event_count = 0
         self.veto_count = 0
@@ -17,12 +17,6 @@ class HcalAnalysis(object):
 
         self.event_count += 1
         #print 'Event: %s' % self.event_count
-
-        # Get the collection of MC particles from the event
-        #particles = event.get_collection('SimParticles_sim')
-        
-        #if particles.GetEntries() == 0: print 'Something is wrong'
-        #print 'Particles: %s' % particles.GetEntries()
 
         hcal_hits = event.get_collection('hcalDigis_recon')
 
@@ -50,9 +44,6 @@ class HcalAnalysis(object):
         self.tree.total_hits = hcal_hits.GetEntriesFast()
         self.tree.total_pe = total_pe
         self.tree.total_pe_fid = total_pe_fid
-
-        # Get the collection of Ecal veto results from the event
-        #hcal_veto_results = event.get_collection('HcalVeto_recon')
 
         self.tree.passes_hcal_veto =  1
         if max_pe >= 8: self.tree.passes_hcal_veto =  0
