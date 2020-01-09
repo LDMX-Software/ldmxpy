@@ -124,47 +124,7 @@ class EcalAnalysis(object):
                     setattr(self.tree, "cyl%s_5_layer_3_6"  % i, me_veto_results[0].cylinder_5_layer_3_6[i])
                     setattr(self.tree, "cyl%s_5_layer_7_14" % i, me_veto_results[0].cylinder_5_layer_7_14[i])
                     setattr(self.tree, "cyl%s_5_layer_15"   % i, me_veto_results[0].cylinder_5_layer_15[i])
-        '''
-
-        # Get the collection of MC particles from the event
-        particles = event.get_collection('SimParticles_sim')
-
-        # Search the list of sim particles for the recoil electron.  If it isn't
-        # found, throw an exception.
-        #recoil_e = au.get_recoil_electron(particles)
-
-        # Get the scoring plane hits at the Ecal and search for any hits
-        # associted with the recoil electron
-        #ecal_sp_hits = event.get_collection('EcalScoringPlaneHits_sim')
-        #self.tree.recoil_e_ecal_sp_x = -9999
-        #self.tree.recoil_e_ecal_sp_y = -9999
-        #self.tree.recoil_e_ecal_sp_z = -9999
-        #max_p = 0
-        #recoil_e_ecal_sp_hit = None
-        #for ecal_sp_hit in ecal_sp_hits: 
-        #    if ecal_sp_hit.getSimParticle() == recoil_e:
-        #        if ecal_sp_hit.getMomentum()[2] <= 0: continue
-                #print 'Ecal scoring plane: x: %s y: %s z: %s ' % (ecal_sp_hit.getPosition()[0],
-                #        ecal_sp_hit.getPosition()[1], ecal_sp_hit.getPosition()[2])
-                #print 'Ecal scoring plane: px: %s py: %s pz: %s' % (ecal_sp_hit.getMomentum()[0], 
-                #        ecal_sp_hit.getMomentum()[1], ecal_sp_hit.getMomentum()[2])
-        #        pvec = ecal_sp_hit.getMomentum()
-        #        p = la.norm(pvec)
-        #        if max_p < p: 
-                    #print 'Max p found'
-        #            max_p = p
-        #            recoil_e_ecal_sp_hit = ecal_sp_hit
-
-        if recoil_e_ecal_sp_hit: 
-            self.tree.recoil_e_ecal_sp_x = recoil_e_ecal_sp_hit.getPosition()[0]
-            self.tree.recoil_e_ecal_sp_y = recoil_e_ecal_sp_hit.getPosition()[1]
-            self.tree.recoil_e_ecal_sp_z = recoil_e_ecal_sp_hit.getPosition()[2]
-
-            self.tree.recoil_e_ecal_sp_p  = max_p
-            self.tree.recoil_e_ecal_sp_px = recoil_e_ecal_sp_hit.getMomentum()[0]
-            self.tree.recoil_e_ecal_sp_py = recoil_e_ecal_sp_hit.getMomentum()[1]
-            self.tree.recoil_e_ecal_sp_pz = recoil_e_ecal_sp_hit.getMomentum()[2]
-        '''
+    
         
         self.tree.fill(reset=True)
 
