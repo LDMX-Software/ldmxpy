@@ -3,6 +3,7 @@ import logging
 import uproot4
 import yaml
 
+import numpy as np
 import pandas as pd
 
 logging.basicConfig(format='[ ldmxpy ][ %(levelname)s ]: %(message)s',
@@ -34,8 +35,16 @@ def main():
 
   data_dict = {}
   for key, values in config['variables'].items():
-    for value in values: 
-      data_dict[value] = tree[key][value].array(library='np')
+    for value in values:
+      a = tree[key][value].array(library='np')
+      if a[0].size != 1:
+        for i in range(0, a[0].size):
+          tmp = []
+          for j in range(0, a.size):
+            tmp.append(a[j][i])
+          data_dict['%s_%s' % (value[:-1], i)] = np.array(tmp)
+      else:
+        data_dict[value[:-1]] = tree[key][value].array(library='np')
 
   print(config['output'])
   data_frame = pd.DataFrame.from_dict(data_dict)
