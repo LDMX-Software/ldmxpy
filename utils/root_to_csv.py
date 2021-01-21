@@ -19,6 +19,8 @@ def main():
                       help='Configuration in yaml format.')
   parser.add_argument('-f', action='store', dest='file', 
                       help='The input file to process.')
+  parer.add_argument('-o', action='store', dest='output', 
+                      help='The output file path.')
   args = parser.parse_args()
     
   # If a configuration file was not specified, warn the user and exit.
@@ -48,9 +50,8 @@ def main():
       else:
         data_dict[value[:-1]] = tree[key][value].array(library='np')
 
-  print(config['output'])
   data_frame = pd.DataFrame.from_dict(data_dict)
-  data_frame.to_csv(config['output'].strip(), sep=',', index=False)
+  data_frame.to_csv(args.output.strip(), sep=',', index=False)
 
 if __name__ == "__main__":
     main()
