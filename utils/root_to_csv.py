@@ -19,7 +19,7 @@ def main():
                       help='Configuration in yaml format.')
   parser.add_argument('-f', action='store', dest='file', 
                       help='The input file to process.')
-  parer.add_argument('-o', action='store', dest='output', 
+  parser.add_argument('-o', action='store', dest='output', 
                       help='The output file path.')
   args = parser.parse_args()
     
