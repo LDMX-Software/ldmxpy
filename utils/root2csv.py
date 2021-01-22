@@ -8,7 +8,7 @@ import yaml
 import numpy as np
 import pandas as pd
 
-logging.basicConfig(format='[ ldmxpy ][ %(levelname)s ]: %(message)s',
+logging.basicConfig(format='[ root2csv ][ %(levelname)s ]: %(message)s',
                     level=logging.INFO)
 
 def main():
